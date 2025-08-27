@@ -4,14 +4,16 @@ import axios from 'axios';
 import { TextField, Button, Box, Stack, Autocomplete, Divider } from "@mui/material";
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import DeleteIcon from "@mui/icons-material/Delete";
+import { type Product } from '@/app/generated/prisma';
+import { useRouter } from 'next/navigation';
+import { RecipeJoined } from '@/types/recipes';
 
-import { type Unit, type Product } from '@/app/generated/prisma';
-
-
-interface FormValues {
+export interface FormValues {
+  id?: number;
   slug?: string;
   name: string;
   ingredients: {
+    type: 'product' | 'recipe';
     productId?: number;
     amount?: number;
     // unit: 
@@ -25,13 +27,17 @@ const defaultValues: FormValues = {
 }
 
 interface RecipeFormProps {
+  recipe?: FormValues;
   products: Product[];
 }
 
-export default function RecipeForm({ products }: RecipeFormProps) {
+export default function RecipeForm({ recipe, products }: RecipeFormProps) {
+  const router = useRouter();
   const { 
     handleSubmit, control, formState: { errors }, reset 
-  } = useForm<FormValues>({ defaultValues });
+  } = useForm<FormValues>({ 
+    defaultValues: recipe?.id ? recipe : defaultValues
+  });
 
   const { fields, append, remove } = useFieldArray({ 
     name: 'ingredients',
@@ -153,7 +159,23 @@ export default function RecipeForm({ products }: RecipeFormProps) {
     </Box>
   );
 
-  function onSubmit(data: FormValues): void {
-    axios.post('/api/recipes', data);
+  async function onSubmit(data: FormValues): Promise<void> {
+    try {
+      if (recipe?.id) {
+        await axios.put(`/api/recipes/${recipe.id}`, data);
+        router.push(`/recipes/${recipe.id}`);
+      }
+      else {
+        const response = await axios.post<RecipeJoined>('/api/recipes', data);
+        const id = response.data.id;
+        router.push(`/recipes/${id}`);
+      }
+    }
+    catch (e) {
+
+    }
+    finally {
+      
+    }
   }
 }

@@ -1,11 +1,15 @@
-import { Box, Grid, Card, Avatar, CardHeader, IconButton, CardMedia, CardContent, Fab, CardActionArea } from "@mui/material";
+import { Box, Grid, Card, Avatar, CardHeader, CardMedia, CardContent, Fab, CardActionArea } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import RecipeActionsButton from "./components/RecipeActionsButton";
 
 export default async function() {
-  const recipes = await prisma.recipe.findMany();
+  const recipes = await prisma.recipe.findMany({
+    include: {
+      user: true
+    }
+  });
 
   return (
     <Box p={2} position='relative'>
@@ -14,23 +18,17 @@ export default async function() {
           recipes.map(recipe => (
             <Grid 
               key={recipe.id}
-              size={{
-                xl: 3,
-                lg: 4,
-                md: 6,
-                sm: 6,
-                xs: 12,
-              }}
+              size={{ xl: 3, lg: 4, md: 6, sm: 6, xs: 12 }}
             >
               <Card>
                 <CardHeader
                   avatar={
-                    <Avatar src='/avatars/vi' aria-label="recipe">
-                      Vi
+                    <Avatar src={`/avatars/Vi.jpg`} aria-label="recipe">
+                      Vi 
                     </Avatar>
                   }
                   action={<RecipeActionsButton id={recipe.id} /> }
-                  title={recipe.name}
+                  title={recipe.name + ` by ${recipe.user.name}`}
                   subheader={(new Date()).toLocaleDateString('ru')}
                 />
                 <CardActionArea LinkComponent={Link} href={`/recipes/${recipe.id}`}>
@@ -63,4 +61,5 @@ export default async function() {
       </Fab>
     </Box>
   );
+
 }

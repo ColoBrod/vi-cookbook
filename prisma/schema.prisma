@@ -15,28 +15,36 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id       Int      @id @default(autoincrement())
+  email    String   @unique
+  name     String
+  password String
+  recipes  Recipe[]
 }
 
 model Product {
-  id         Int          @id @default(autoincrement())
-  slug       String @unique
-  name       String
-  calories   Float
-  protein    Float
-  fat        Float
-  carbs      Float
-  categories Category[]
-  ingredient Ingredient[]
+  id          Int          @id @default(autoincrement())
+  slug        String       @unique
+  name        String
+  calories    Float
+  protein     Float
+  fat         Float
+  carbs       Float
+  categories  Category[]
+  ingredient  Ingredient[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Recipe {
   id          Int          @id @default(autoincrement())
-  slug        String @unique
+  slug        String       @unique
   name        String
   ingredients Ingredient[]
+  userId      Int          @default(1)
+  user        User         @relation(fields: [userId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 enum Unit {

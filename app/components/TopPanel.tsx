@@ -1,7 +1,9 @@
-import { AppBar, Toolbar, Button, Typography, Stack } from "@mui/material";
+import { AppBar, Toolbar, Button, Typography, Stack, Box } from "@mui/material";
 import Link from "next/link";
 import { AppLink } from "@/types/links";
 import GoBackButton from "./GoBackButton";
+import SignOutButton from "./SignOutButton";
+import UserButton from "./UserButton";
 
 export default function TopPanel() {
   return (
@@ -17,6 +19,11 @@ export default function TopPanel() {
         <Button color="inherit" component={Link} href={AppLink.Categories}>
           Категории
         </Button>
+        {/*<SignOutButton />*/}
+        <Box display='flex' justifyContent='flex-end' sx={{ flexGrow: 1 }}>
+          <UserButton />
+        </Box>
+
       </Toolbar>
       {/*
       <Stack direction='row' spacing={1}>

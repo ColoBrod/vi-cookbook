@@ -3,10 +3,13 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { RecipesAddDto } from "@/types/dto";
 import { Unit } from "@/app/generated/prisma";
+import { sendTelegramMessage } from "@/lib/tg/sendTelegramMessage";
 
 export async function POST(request: Request) {
   const data = await request.json() as RecipesAddDto;
   console.log(data);
+  // prisma.recipe.
+  // prisma.recipe.groupBy
   const recipe = await prisma.recipe.create({
     data: {
       slug: data.slug,
@@ -27,16 +30,8 @@ export async function POST(request: Request) {
       },
     },
   });
+
+  sendTelegramMessage(`Пользователь создал новый рецепт. Просмотреть: http://192.168.1.2:3000/recipes/${recipe.id}`);
   return NextResponse.json(recipe, { status: 200 });
 }
 
-export async function DELETE(request: Request) {
-  const url = new URL(request.url);
-  const idParam = url.searchParams.get("id") ?? "0";
-  const id = parseInt(idParam);
-  console.log("DELETE");
-  console.log(idParam);
-  console.log(id);
-  await prisma.recipe.delete({ where: { id } });
-  return NextResponse.json({ status: 200 });
-}

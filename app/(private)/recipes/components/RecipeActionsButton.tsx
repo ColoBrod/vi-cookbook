@@ -26,6 +26,7 @@ export default function RecipeActionsButton({ id }: Props) {
         onClose={handleClose}
         onClick={(e) => e.stopPropagation()} // чтобы меню кликом не открывало карточку
       >
+        <MenuItem onClick={handleEdit}>Редактировать</MenuItem>
         <MenuItem onClick={handleDelete}>Удалить</MenuItem>
       </Menu>
     </>
@@ -40,9 +41,13 @@ export default function RecipeActionsButton({ id }: Props) {
     setAnchorEl(null);
   }
 
+  async function handleEdit() {
+    router.push(`/recipes/edit/${id}`);
+  }
+
   async function handleDelete() {
     try {
-      await axios.delete(`/api/recipes?id=${id}`);
+      await axios.delete(`/api/recipes/${id}`);
       router.refresh();
     }
     catch (e) {
