@@ -23,28 +23,47 @@ model User {
 }
 
 model Product {
-  id          Int          @id @default(autoincrement())
-  slug        String       @unique
-  name        String
-  calories    Float
-  protein     Float
-  fat         Float
-  carbs       Float
-  categories  Category[]
-  ingredient  Ingredient[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
+  slug      String   @unique
+  name      String
+  calories  Float
+  protein   Float
+  fat       Float
+  carbs     Float
+  tags      Tag[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Recipe {
-  id          Int          @id @default(autoincrement())
-  slug        String       @unique
-  name        String
-  ingredients Ingredient[]
-  userId      Int          @default(1)
-  user        User         @relation(fields: [userId], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           Int          @id @default(autoincrement())
+  uuid         String       @unique @default(uuid())
+  slug         String       @unique
+  name         String
+  description  String       @default("")
+  instructions String       @default("")
+  items        RecipeItem[]
+  authorId     Int          @default(1)
+  author       User         @relation(fields: [authorId], references: [id])
+  tags         Tag[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model RecipeItem {
+  id             Int            @id @default(autoincrement())
+  recipeId       Int
+  recipe         Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientUuid String
+  ingredientType IngredientType
+  amount         Float
+  unit           Unit
+}
+
+enum IngredientType {
+  PRODUCT
+  RECIPE
 }
 
 enum Unit {
@@ -55,21 +74,29 @@ enum Unit {
   PCS
 }
 
-model Ingredient {
-  id        Int      @id @default(autoincrement())
-  recipeId  Int
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  productId Int?
-  product   Product? @relation(fields: [productId], references: [id])
-  amount    Float
-  unit      Unit
+model Tag {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+  recipes  Recipe[]
+  isRecipe Boolean   @default(true)
 }
 
-model Category {
-  id       Int        @id @default(autoincrement())
-  name     String
-  parentId Int?
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-  products Product[]
-}
+// model Ingredient {
+//   id        Int      @id @default(autoincrement())
+//   recipeId  Int
+//   recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+//   productId Int?
+//   product   Product? @relation(fields: [productId], references: [id])
+//   amount    Float
+//   unit      Unit
+// }
+
+// model Category {
+//   id       Int        @id @default(autoincrement())
+//   name     String
+//   parentId Int?
+//   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+//   children Category[] @relation("CategoryHierarchy")
+//   products Product[]
+// }

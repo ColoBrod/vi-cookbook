@@ -1,10 +1,12 @@
 import RecipeForm from "../components/RecipeForm";
-import prisma from "@/lib/prisma";
+import { getAvailableIngredients } from "@/model/recipe";
+import { getRecipesTags } from "@/model/tags";
 
 export default async function() {
-  const products = await prisma.product.findMany();
+  const availableIngredients = await getAvailableIngredients();
+  const availableTags = await getRecipesTags();
 
   return (
-    <RecipeForm products={products} />
+    <RecipeForm items={availableIngredients} tags={availableTags} />
   );
 }

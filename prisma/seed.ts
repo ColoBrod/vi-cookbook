@@ -12,9 +12,13 @@ main()
   });
 
 async function main() {
-  /**
-   * Создаем пользователей
-   */
+  await createUsers();
+  await createProducts();
+  await createTags();
+  // await createRecipes();
+}
+
+async function createUsers() {
   await prisma.user.createMany({
     data: [
       {
@@ -29,9 +33,9 @@ async function main() {
       },
     ],
   });
-  /**
-   * Продукты
-   */
+}
+
+async function createProducts() {
   await prisma.product.createMany({
     data: [
       {
@@ -135,9 +139,9 @@ async function main() {
       },
     ]
   });
-  /**
-   * Рецепты
-   */
+}
+
+async function createRecipes() {
   await prisma.recipe.create({
     data: {
       id: 1,
@@ -233,4 +237,16 @@ async function main() {
       ingredients: true,
     },
   });
+}
+
+async function createTags() {
+  await prisma.tag.createMany({
+    data: [
+      { id: 1, name: "Суп" },
+      { id: 2, name: "Завтрак" },
+      { id: 3, name: "Молоко" },
+      { id: 4, name: "Выживание" },
+    ],
+  })
+  
 }

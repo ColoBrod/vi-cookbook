@@ -6,7 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:format": "prisma format",
+    "db:push": "prisma db push --force-reset",
+    "db:seed": "prisma db seed",
+    "db:gen": "prisma generate",
+    "db:migrate": "",
+    "db:reset": ""
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -23,7 +29,8 @@
     "next-auth": "^4.24.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-hook-form": "^7.62.0"
+    "react-hook-form": "^7.62.0",
+    "transliteration": "^2.3.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

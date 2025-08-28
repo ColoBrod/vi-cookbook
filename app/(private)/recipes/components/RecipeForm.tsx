@@ -1,67 +1,60 @@
 'use client'
 
 import axios from 'axios';
-import { TextField, Button, Box, Stack, Autocomplete, Divider } from "@mui/material";
+import { TextField, Button, Box, Stack, Autocomplete, Divider, InputLabel, Select, MenuItem, Typography } from "@mui/material";
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import DeleteIcon from "@mui/icons-material/Delete";
-import { type Product } from '@/app/generated/prisma';
+import { type RecipeItem, type Product, IngredientType } from '@/app/generated/prisma';
 import { useRouter } from 'next/navigation';
-import { RecipeJoined } from '@/types/recipes';
+import { FormRecipeTag, RecipeJoined } from '@/types/recipes';
+import { FormRecipeItem } from '@/types/recipes';
+import { slugify } from 'transliteration';
+import { error } from 'node:console';
+import { Fragment } from 'react';
 
 export interface FormValues {
   id?: number;
   slug?: string;
   name: string;
-  ingredients: {
-    type: 'product' | 'recipe';
-    productId?: number;
+  tags: number[];
+  // tags: {
+  //   id: number;
+  // }[];
+  items: {
+    type?: IngredientType;
+    ingredientUuid?: string;
     amount?: number;
-    // unit: 
   }[]
 }
 
 const defaultValues: FormValues = {
   slug: "",
   name: "",
-  ingredients: [],
+  tags: [],
+  items: [],
 }
 
 interface RecipeFormProps {
   recipe?: FormValues;
-  products: Product[];
+  items: FormRecipeItem[];
+  tags: FormRecipeTag[];
 }
 
-export default function RecipeForm({ recipe, products }: RecipeFormProps) {
+export default function RecipeForm({ recipe, items, tags: tagsAvailable }: RecipeFormProps) {
   const router = useRouter();
   const { 
-    handleSubmit, control, formState: { errors }, reset 
+    getValues, handleSubmit, control, formState: { errors }, reset, setValue
   } = useForm<FormValues>({ 
     defaultValues: recipe?.id ? recipe : defaultValues
   });
 
-  const { fields, append, remove } = useFieldArray({ 
-    name: 'ingredients',
-    control
-  });
+  const { fields, append, remove } = useFieldArray({ name: 'items', control });
 
   return (
     <Box p={2}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2}>
           <Stack spacing={2} alignItems='flex-start'>
-            <Controller 
-              name="slug"
-              control={control}
-              render={({ field, fieldState: {error} }) => (
-                <TextField 
-                  {...field}
-                  type='text'
-                  label="ID рецепта"
-                  error={!!error}
-                  helperText={error?.message}
-                />
-              )}
-            />
             <Controller 
               name="name"
               control={control}
@@ -76,13 +69,55 @@ export default function RecipeForm({ recipe, products }: RecipeFormProps) {
                   label="Название рецепта"
                   error={!!error}
                   helperText={error?.message}
+                  onChange={(e) => {
+                    const { value } = e.currentTarget;
+                    setValue('name', value);
+                    setValue('slug', slugify(value));
+                  }}
                 />
+              )}
+            />
+            <Controller 
+              name="slug"
+              control={control}
+              render={({ field, fieldState: {error} }) => (
+                <TextField 
+                  {...field}
+                  type='text'
+                  label="ID рецепта"
+                  error={!!error}
+                  helperText={error?.message}
+                />
+              )}
+            />
+            <Controller 
+              name='tags'
+              control={control}
+              render={({ field, fieldState: { error }}) => (
+                <Fragment>
+                  <InputLabel id="tags-label">
+                    Категории
+                  </InputLabel>
+                  <Select
+                    {...field}
+                    labelId='tags-label'
+                    multiple
+                    error={!!error}
+                    fullWidth
+                  >
+                    {tagsAvailable.map(tag => (
+                      <MenuItem key={tag.id} value={tag.id}>
+                        {tag.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Fragment>
               )}
             />
             <Button
               type="button"
               variant="outlined"
-              onClick={() => append({ productId: undefined, amount: undefined })}
+              onClick={() => append({ ingredientUuid: undefined, amount: undefined, type: undefined })}
             >
               Добавить ингредиент
             </Button>
@@ -90,22 +125,27 @@ export default function RecipeForm({ recipe, products }: RecipeFormProps) {
           <Divider />
           <Stack py={2} spacing={2}>
             {fields.map((field, index) => (
-              <Stack direction='row' spacing={1} key={field.id} alignItems='flex-start'>
+              <Stack direction='row' spacing={1} key={index} alignItems='flex-start'>
                 <Controller
-                  name={`ingredients.${index}.productId`}
+                  name={`items.${index}.ingredientUuid`}
                   control={control}
                   rules={{ required: 'Выбери ингредиент' }}
                   render={({ field: ctrlField, fieldState: { error } }) => (
                     <Autocomplete 
-                      options={products}
+                      options={items}
                       getOptionLabel={option => option.name}
-                      onChange={(_, val) => ctrlField.onChange(val?.id ?? "")}
-                      value={products.find((p) => p.id === ctrlField.value) ?? null}
+                      onChange={(_, val) => {
+                        // Обновляем ingredientUuid
+                        ctrlField.onChange(val?.uuid ?? "");
+                        // Обновляем type соответствующего поля
+                        setValue(`items.${index}.type`, val?.type ?? undefined);
+                      }}
+                      value={items.find((p) => p.uuid === ctrlField.value) ?? null}
                       sx={{ flexGrow: 1 }}
                       renderInput={(params) => (
                         <TextField 
                           {...params} 
-                          label="Продукт" 
+                          label="Ингредиент" 
                           error={!!error}
                           helperText={error?.message}
                           sx={{ flexGrow: 1 }}
@@ -116,7 +156,7 @@ export default function RecipeForm({ recipe, products }: RecipeFormProps) {
                 />
 
                 <Controller
-                  name={`ingredients.${index}.amount`}
+                  name={`items.${index}.amount`}
                   control={control}
                   rules={{ 
                     required: 'Укажи Amount',
@@ -160,15 +200,16 @@ export default function RecipeForm({ recipe, products }: RecipeFormProps) {
   );
 
   async function onSubmit(data: FormValues): Promise<void> {
+    console.log(data);
     try {
-      if (recipe?.id) {
+      if (recipe?.slug) {
         await axios.put(`/api/recipes/${recipe.id}`, data);
-        router.push(`/recipes/${recipe.id}`);
+        router.push(`/recipes/${recipe.slug}`);
       }
       else {
         const response = await axios.post<RecipeJoined>('/api/recipes', data);
-        const id = response.data.id;
-        router.push(`/recipes/${id}`);
+        const slug = response.data.recipe.slug;
+        router.push(`/recipes/${slug}`);
       }
     }
     catch (e) {

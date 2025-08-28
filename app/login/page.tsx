@@ -10,20 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-    if (res?.ok) {
-      router.push("/recipes"); // после логина отправляем на главную
-    } else {
-      alert("Неверный логин или пароль");
-    }
-  }
-
   return (
     <form onSubmit={handleSubmit}>
       <Stack spacing={2} sx={{ maxWidth: 300, margin: "50px auto" }}>
@@ -42,5 +28,19 @@ export default function LoginPage() {
       </Stack>
     </form>
   );
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+    if (res?.ok) {
+      router.push("/recipes"); // после логина отправляем на главную
+    } else {
+      alert("Неверный логин или пароль");
+    }
+  }
 }
 

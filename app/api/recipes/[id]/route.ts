@@ -32,21 +32,27 @@ export async function PUT(request: Request, { params }: Params) {
     data: {
       slug: data.slug,
       name: data.name,
-      ingredients: {
+      items: {
         deleteMany: {}, // удалить все старые
-        create: data.ingredients.map(ing => ({
-          product: {
-            connect: { id: ing.productId },
-          },
-          amount: ing.amount,
+        create: data.items.map(item => ({
+          ingredientUuid: item.ingredientUuid,
+          ingredientType: item.type,
+          amount: item.amount,
           unit: Unit.G,
         }))
-      }
+      },
+      tags: {
+        set: data.tags.map(tagId => ({ id: tagId })),
+      },
     },
     include: {
-      ingredients: { include: { product: true } }
+      items: true,
+      tags: true,
     }
   });
+
+  console.log('Server error:');
+  console.log(recipe)
 
   return NextResponse.json(recipe, { status: 200 });
 }
