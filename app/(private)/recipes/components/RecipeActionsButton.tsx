@@ -7,10 +7,11 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 
 interface Props {
+  id: number;
   slug: string;
 }
 
-export default function RecipeActionsButton({ slug }: Props) {
+export default function RecipeActionsButton({ id, slug }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function RecipeActionsButton({ slug }: Props) {
 
   async function handleDelete() {
     try {
-      await axios.delete(`/api/recipes/${slug}`);
+      await axios.delete(`/api/recipes/${id}`);
       router.refresh();
     }
     catch (e) {

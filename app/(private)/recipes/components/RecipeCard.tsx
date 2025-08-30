@@ -26,7 +26,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
             Vi 
           </Avatar>
         }
-        action={<RecipeActionsButton slug={recipe.slug} /> }
+        action={<RecipeActionsButton id={recipe.id} slug={recipe.slug} /> }
         title={recipe.name}
         subheader={(new Date()).toLocaleDateString('ru')}
       />

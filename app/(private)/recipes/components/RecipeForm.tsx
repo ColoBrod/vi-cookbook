@@ -1,35 +1,36 @@
 'use client'
 
 import axios from 'axios';
+import { useEffect, Fragment, useState } from 'react';
 import { TextField, Button, Box, Stack, Autocomplete, Divider, InputLabel, Select, MenuItem, Typography } from "@mui/material";
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import DeleteIcon from "@mui/icons-material/Delete";
-import { type RecipeItem, type Product, IngredientType } from '@/app/generated/prisma';
+import { IngredientType } from '@/app/generated/prisma';
 import { useRouter } from 'next/navigation';
 import { FormRecipeTag, RecipeJoined } from '@/types/recipes';
 import { FormRecipeItem } from '@/types/recipes';
 import { slugify } from 'transliteration';
-import { error } from 'node:console';
-import { Fragment } from 'react';
+import Image from 'next/image';
+
+import { DEFAULT_RECIPE_IMAGE_URL } from '@/constants/images';
 
 export interface FormValues {
   id?: number;
   slug?: string;
   name: string;
+  image: File | null;
   tags: number[];
-  // tags: {
-  //   id: number;
-  // }[];
   items: {
     type?: IngredientType;
     ingredientUuid?: string;
     amount?: number;
-  }[]
+  }[];
 }
 
 const defaultValues: FormValues = {
   slug: "",
   name: "",
+  image: null,
   tags: [],
   items: [],
 }
@@ -43,12 +44,13 @@ interface RecipeFormProps {
 export default function RecipeForm({ recipe, items, tags: tagsAvailable }: RecipeFormProps) {
   const router = useRouter();
   const { 
-    getValues, handleSubmit, control, formState: { errors }, reset, setValue
+    register, getValues, handleSubmit, control, formState: { errors }, reset, setValue, watch
   } = useForm<FormValues>({ 
     defaultValues: recipe?.id ? recipe : defaultValues
   });
-
   const { fields, append, remove } = useFieldArray({ name: 'items', control });
+  const image = register('image');
+  const [imagePreview, setImagePreview] = useState<string>(DEFAULT_RECIPE_IMAGE_URL);
 
   return (
     <Box p={2}>
@@ -90,6 +92,47 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
                 />
               )}
             />
+            <input
+              ref={image.ref}
+              type="file"
+              accept="image/*"
+              id="upload-image"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const files = e.currentTarget.files as FileList;
+                if (files.length !== 1) {
+                  setValue('image', null);
+                  setImagePreview(DEFAULT_RECIPE_IMAGE_URL);
+                  return;
+                }
+                const file = files[0];
+                setValue('image', file);
+                const imageUrl = URL.createObjectURL(file);
+                setImagePreview(imageUrl);
+                console.log('image url:', imageUrl);
+                console.log('type:', typeof imageUrl);
+              }}
+            />
+            <label htmlFor="upload-image">
+              <Button variant="contained" component="span">
+                Загрузить изображение
+              </Button>
+            </label>
+            <Button variant='outlined' onClick={() => {
+              setValue('image', null)
+              setImagePreview(DEFAULT_RECIPE_IMAGE_URL);
+            }}>
+              Очистить изображение
+            </Button>
+            <Box sx={{
+              backgroundImage: `url(${imagePreview})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              width: 400,
+              height: 300,
+            }}/>
+            {/*<img src={imagePreview} alt="" width={400} height={300} />*/}
+            {/*<Image src={imagePreview} alt='Recipe image' width={400} height={300} />*/}
             <Controller 
               name='tags'
               control={control}
@@ -179,10 +222,6 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
                 <Button sx={{ height: 56 }} variant='outlined' color='error' onClick={() => remove(index)}>
                   <DeleteIcon />
                 </Button>
-                {/*
-                  <IconButton onClick={() => remove(index)}>
-                  </IconButton>
-                */}
               </Stack>
             ))}
           </Stack>
@@ -199,15 +238,27 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
     </Box>
   );
 
-  async function onSubmit(data: FormValues): Promise<void> {
-    console.log(data);
+  async function onSubmit(formValues: FormValues): Promise<void> {
+    const formData = new FormData();
+    const { image, ...data } = formValues;
+    formData.append('data', JSON.stringify(data));
+    if (image instanceof File) formData.append('image', image);
+
     try {
       if (recipe?.slug) {
-        await axios.put(`/api/recipes/${recipe.id}`, data);
+        await axios.put(
+          `/api/recipes/${recipe.id}`, 
+          formData, 
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
         router.push(`/recipes/${recipe.slug}`);
       }
       else {
-        const response = await axios.post<RecipeJoined>('/api/recipes', data);
+        const response = await axios.post<RecipeJoined>(
+          '/api/recipes', 
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
         const slug = response.data.recipe.slug;
         router.push(`/recipes/${slug}`);
       }

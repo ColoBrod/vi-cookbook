@@ -15,11 +15,12 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  name     String
-  password String
-  recipes  Recipe[]
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  name        String
+  password    String
+  recipes     Recipe[]
+  collections Collection[]
 }
 
 model Product {
@@ -37,18 +38,20 @@ model Product {
 }
 
 model Recipe {
-  id           Int          @id @default(autoincrement())
-  uuid         String       @unique @default(uuid())
-  slug         String       @unique
+  id           Int                @id @default(autoincrement())
+  uuid         String             @unique @default(uuid())
+  slug         String             @unique
   name         String
-  description  String       @default("")
-  instructions String       @default("")
+  imagePath    String             @default("")
+  description  String             @default("")
+  instructions String             @default("")
   items        RecipeItem[]
-  authorId     Int          @default(1)
-  author       User         @relation(fields: [authorId], references: [id])
+  authorId     Int                @default(1)
+  author       User               @relation(fields: [authorId], references: [id])
   tags         Tag[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  collections  CollectionRecipe[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 model RecipeItem {
@@ -80,6 +83,23 @@ model Tag {
   products Product[]
   recipes  Recipe[]
   isRecipe Boolean   @default(true)
+}
+
+model Collection {
+  id       Int                @id @default(autoincrement())
+  name     String
+  recipes  CollectionRecipe[]
+  author   User               @relation(fields: [authorId], references: [id])
+  authorId Int
+}
+
+model CollectionRecipe {
+  id           Int        @id @default(autoincrement())
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  collectionId Int
+  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+  recipeId     Int
+  weight       Int
 }
 
 // model Ingredient {

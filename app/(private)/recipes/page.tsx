@@ -27,22 +27,20 @@ interface PageProps {
 
 export default async function({ searchParams }: PageProps) {
   const filters = await getFilters();
-  const where = getWhereClause();
   const recipes = await prisma.recipe.findMany({
-    where,
-    // where: {
-    //   AND: [
-    //     { name: { search } }
-    //   ]
-    // }
-    // where: 
-    // where: filters.tags.length > 0
-    //   ? {
-    //       tags: {
-    //         some: { id: { in: filters.tags }}
-    //       },
-    //     }
-    //   : {},
+    where: {
+      AND: [
+        filters.query 
+          ? { name: { contains: filters.query } } 
+          : {},
+        filters.tags.length > 0
+          ? { tags: { some: { id: { in: filters.tags }} } }
+          : {},
+        filters.author
+          ? { author: { id: filters.author } }
+          : {},
+      ]
+    },
     include: { author: true, tags: true }
   });
   const tagsAvailable = await prisma.tag.findMany({ where: { isRecipe: true } });
@@ -79,6 +77,7 @@ export default async function({ searchParams }: PageProps) {
     </Box>
   );
 
+  /*
   function getWhereClause(): RecipeWhereInput {
     const where: RecipeWhereInput = {
       AND: [
@@ -100,14 +99,14 @@ export default async function({ searchParams }: PageProps) {
     // Если AND пустой — убираем его, чтобы Prisma вернула всё
     if (where.AND.length === 0) delete where.AND;
     return where;
-
   }
+  */
 
   async function getFilters() {
     const filters = await searchParams;
     const tags = filters?.tags?.split(',').map(tag => parseInt(tag)) ?? [];
     const query = filters?.query ?? "";
-    const author = filters?.author ?? 0;
+    const author = isNaN(parseInt(filters?.author)) ? 0 : parseInt(filters?.author);
     return { tags, query, author };
   }
 

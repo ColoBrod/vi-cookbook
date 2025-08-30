@@ -16,6 +16,9 @@ export default function TopPanel() {
         <Button color="inherit" component={Link} href={AppLink.Recipes}>
           Рецепты
         </Button>
+        <Button color="inherit" component={Link} href={AppLink.Collections}>
+          Подборки
+        </Button>
         <Button color="inherit" component={Link} href={AppLink.Categories}>
           Категории
         </Button>
