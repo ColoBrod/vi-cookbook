@@ -4,43 +4,42 @@ import prisma from "@/lib/prisma";
 import Link from "next/link";
 import RecipeCard from "./components/RecipeCard";
 import RecipesFilterBar from "./components/RecipesFilterBar";
-import { PrismaClient } from "@/app/generated/prisma";
-import { Prisma } from '@/app/generated/prisma';
-
-type GetWherePayload<T extends Record<any, any>, M extends keyof any> =
-  Exclude<Prisma.Args<T[M], 'findFirstOrThrow'>['where'], undefined>
-
-type RecipeWhereInput = GetWherePayload<typeof prisma, 'recipe'>
-
-// PrismaClient.RecipeWhereInput
-
-// import RecipeWhereInput
-// Prisma.RecipeWhereInput
+import AddToCollectionForm from "./components/AddToCollectionForm";
+import RecipesPagination from "./components/RecipesPagination";
+import { MyPagination } from "@/types/general";
 
 interface PageProps {
   searchParams: Promise<{
     query: string;
     tags: string;
     author: string;
+    page: string;
   }>;
 }
 
+const ITEMS_PER_PAGE = 12;
+
 export default async function({ searchParams }: PageProps) {
   const filters = await getFilters();
+  const where = {
+    AND: [
+      filters.query 
+        ? { name: { contains: filters.query } } 
+        : {},
+      filters.tags.length > 0
+        ? { tags: { some: { id: { in: filters.tags }} } }
+        : {},
+      filters.author
+        ? { author: { id: filters.author } }
+        : {},
+    ]
+  };
+  const pagination = await getPagination(where);
+  // TODO - фильтры дублируются в getPagination. Это ужОс
   const recipes = await prisma.recipe.findMany({
-    where: {
-      AND: [
-        filters.query 
-          ? { name: { contains: filters.query } } 
-          : {},
-        filters.tags.length > 0
-          ? { tags: { some: { id: { in: filters.tags }} } }
-          : {},
-        filters.author
-          ? { author: { id: filters.author } }
-          : {},
-      ]
-    },
+    where,
+    skip: pagination.skip,
+    take: pagination.take,
     include: { author: true, tags: true }
   });
   const tagsAvailable = await prisma.tag.findMany({ where: { isRecipe: true } });
@@ -62,6 +61,9 @@ export default async function({ searchParams }: PageProps) {
           </Grid>
         ))}
       </Grid>
+
+      <RecipesPagination pagination={pagination} />
+
       <Fab 
         LinkComponent={Link}
         href="/recipes/add"
@@ -74,33 +76,20 @@ export default async function({ searchParams }: PageProps) {
       >
         <AddIcon />
       </Fab>
+      <AddToCollectionForm />
     </Box>
   );
 
-  /*
-  function getWhereClause(): RecipeWhereInput {
-    const where: RecipeWhereInput = {
-      AND: [
-        filters.query && {
-          name: { search: filters.query },
-        },
-        filters.tags.length > 0 && {
-          tags: {
-            some: { id: { in: filters.tags } },
-          },
-        },
-        filters.author && {
-          author: filters.author,
-        },
-        // можно добавлять другие фильтры
-      ].filter(Boolean), // убираем все false/null
-    };
-
-    // Если AND пустой — убираем его, чтобы Prisma вернула всё
-    if (where.AND.length === 0) delete where.AND;
-    return where;
+  async function getPagination(where: any): Promise<MyPagination> {
+    const pageParam = (await searchParams).page ?? "1"; //.get('page') ?? "1";
+    const pageInt = parseInt(pageParam);
+    const page = isNaN(pageInt) ? 1 : pageInt;
+    const total = await prisma.recipe.count({ where });
+    const take = ITEMS_PER_PAGE;
+    const pages = Math.ceil(total / take);
+    const skip = (page - 1) * take;
+    return { page, pages, total, skip, take };
   }
-  */
 
   async function getFilters() {
     const filters = await searchParams;
@@ -109,5 +98,6 @@ export default async function({ searchParams }: PageProps) {
     const author = isNaN(parseInt(filters?.author)) ? 0 : parseInt(filters?.author);
     return { tags, query, author };
   }
+
 
 }

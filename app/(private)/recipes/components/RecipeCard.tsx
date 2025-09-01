@@ -1,10 +1,18 @@
 
-import { Card, Avatar, CardHeader, CardMedia, CardContent, CardActionArea, Stack, Typography } from '@mui/material';
+import { 
+  Card, Avatar, CardHeader, CardMedia, CardContent, CardActionArea, Stack, 
+  Typography, 
+  IconButton
+} from '@mui/material';
 import RecipeActionsButton from "./RecipeActionsButton";
 import Link from "next/link";
 import { Recipe, Tag, User } from "@/app/generated/prisma";
 import { getRecipeImagePath } from '@/lib/recipe';
 import RecipeTag from './RecipeTag';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import FavoriteOutlinedIcon from '@mui/icons-material/FavoriteOutlined';
+import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
+import AddShoppingCartOutlinedIcon from '@mui/icons-material/AddShoppingCartOutlined';
 
 interface RecipeWithAuthorAndTags extends Recipe {
   author: User;
@@ -47,6 +55,17 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
             {recipe.tags.map(tag => (
               <RecipeTag key={tag.id} {...tag} />
             ))}
+          </Stack>
+          <Stack direction='row' spacing={1}>
+            <IconButton>
+              <FavoriteBorderOutlinedIcon />
+            </IconButton>
+            <IconButton>
+              <ShareOutlinedIcon />
+            </IconButton>
+            <IconButton>
+              <AddShoppingCartOutlinedIcon />
+            </IconButton>
           </Stack>
         </Stack>
       </CardContent>

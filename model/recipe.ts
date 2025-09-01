@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { IngredientType, Product, Recipe } from "@/app/generated/prisma";
 import { FormRecipeItem, RecipeTableRow } from "@/types/recipes";
+import { Uuid, Weight } from "@/types/general";
 
 export async function getAvailableIngredients(): Promise<FormRecipeItem[]> {
   const [products, recipes] = await Promise.all([
@@ -29,6 +30,19 @@ export async function getRecipeBySlugOrUuid(slugOrUuid: string) {
   });
   if (recipe === null) return null;
   return getRecipeById(recipe.id);
+}
+
+export async function getRecipeId(uuidOrSlug: string): Promise<number | null> {
+  const recipe = await prisma.recipe.findFirst({
+    select: { id: true },
+    where: {
+      OR: [
+        { uuid: uuidOrSlug },
+        { slug: uuidOrSlug },
+      ],
+    },
+  });
+  return recipe?.id ?? null;
 }
 
 export async function getRecipeById(id: number) {
@@ -108,6 +122,64 @@ export async function getRecipeById(id: number) {
   //   //   })
   // });
   return { recipe, table };
+}
+
+export async function getRecipeProductsWeight(recipeId: number) {
+  const uuidToWeight = await getRecipeProductsUuidWeightMap(recipeId);
+  const products = await prisma.product.findMany({
+    where: {
+      uuid: { in: Array.from(uuidToWeight.keys()) }, 
+    },
+  });
+
+  return products.map(product => ({
+    uuid: product.uuid,
+    name: product.name,
+    weight: uuidToWeight.get(product.uuid) ?? 0,
+  }));
+}
+
+export async function getRecipeProductsUuidWeightMap(recipeId: number) {
+
+  const recipe = await prisma.recipe.findUnique({
+    where: { id: recipeId },
+    include: {
+      items: true,
+    },
+  });
+
+  const uuidToWeight = new Map<Uuid, Weight>();
+
+  if (recipe === null) return uuidToWeight;
+
+  for (const item of recipe.items) {
+    if (item.ingredientType === IngredientType.PRODUCT) {
+      accumulateWeight(item.ingredientUuid, item.amount);
+    }
+    else if (item.ingredientType === IngredientType.RECIPE) {
+      const subRecipeId = await getRecipeId(item.ingredientUuid) as number;
+      // if (subRecipeId === null)
+      //   throw new Error (`Рецепт с UUID ${item.ingredientUuid} не найден`);
+      const subRecipeMap = await getRecipeProductsUuidWeightMap(subRecipeId);
+      const subRecipeYield = [...subRecipeMap].reduce((acc, cur) => acc + cur[1], 0);
+      const factor = item.amount / subRecipeYield;
+      [...subRecipeMap.entries()]
+        .forEach(([uuid, weight]) => accumulateWeight(uuid, weight * factor));
+      // subRecipeMap.forEach((value, key) => accu)
+    }
+  }
+
+  return uuidToWeight;
+
+  function accumulateWeight(uuid: Uuid, weight: Weight): void {
+    const accumulated = uuidToWeight.get(uuid);
+    if (accumulated === undefined) {
+      uuidToWeight.set(uuid, weight);
+    }
+    else {
+      uuidToWeight.set(uuid, weight + accumulated);
+    }
+  }
 }
 
 // function mapIngredientsToTable(input: (Recipe|Product)[]): RecipeTableRow[] {

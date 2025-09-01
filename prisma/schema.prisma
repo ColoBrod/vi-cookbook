@@ -91,6 +91,8 @@ model Collection {
   recipes  CollectionRecipe[]
   author   User               @relation(fields: [authorId], references: [id])
   authorId Int
+
+  @@unique([authorId, name])
 }
 
 model CollectionRecipe {
@@ -100,6 +102,8 @@ model CollectionRecipe {
   recipe       Recipe     @relation(fields: [recipeId], references: [id])
   recipeId     Int
   weight       Int
+
+  @@unique([collectionId, recipeId])
 }
 
 // model Ingredient {

@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { Dialog, DialogTitle, DialogContent, Stack, Button, TextField } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { AppEvent } from "@/constants/events";
+import { useRouter } from "next/navigation";
+import { useSnackbar } from "notistack";
+import { CollectionsCreateDto } from "@/types/dto";
 
 interface FormValues {
   name: string;
@@ -15,17 +18,19 @@ const defaultValues = {
 }
 
 export default function() {
+  const router = useRouter();
   const { control, handleSubmit } = useForm({ defaultValues });
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const title = 'Создать новую подборку';
   useEffect(handleMounted, []);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   return (
     <Dialog open={visible} onClose={handleClose}>
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ width: 300 }}>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Stack>
+          <Stack spacing={2} pt={2}>
             <Controller
               name="name"
               control={control}
@@ -44,7 +49,6 @@ export default function() {
             <Button type="submit" variant="contained">
               Сохранить
             </Button>
-
           </Stack>
         </form>
       </DialogContent>
@@ -52,11 +56,24 @@ export default function() {
   );
 
   async function onSubmit(formValues: FormValues): Promise<void> {
+    const closeEvent = new Event(AppEvent.Collection.HideCreateForm);
     try {
       await axios.post(`/api/collections`, formValues);
+      enqueueSnackbar('Добавлена новая подборка', { variant: 'success' })
+      router.refresh();
     }
-    catch (e) {}
-    finally {}
+    catch (err) {
+      const error = err as AxiosError<{ error: string; }>
+      if (error.response?.data?.error) {
+        enqueueSnackbar(error.response.data.error, { variant: 'error' })
+      }
+      else {
+        enqueueSnackbar('Уууупс... Что-то пошло не так', { variant: 'error' })
+      }
+    }
+    finally {
+      document.dispatchEvent(closeEvent);
+    }
   }
 
   function handleOpen() {

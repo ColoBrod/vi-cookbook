@@ -1,7 +1,20 @@
-import { IngredientType } from "@/app/generated/prisma";
+import { CollectionRecipe, IngredientType } from "@/app/generated/prisma";
 
 export interface CollectionsCreateDto {
   name: string;
+}
+
+export interface CollectionUpdateDto {
+  recipeId: number;
+  weight: number;
+}
+
+export type CollectionRecipePatchDto = Omit<CollectionRecipe, 'id' | 'collectionId'>;
+
+export interface CollectionAddRecipeDto {
+  recipeId: number;
+  // collectionId: number;
+  weight: number;
 }
 
 export interface RecipesAddDto {

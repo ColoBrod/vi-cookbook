@@ -7,6 +7,7 @@ type Params = {
   params: { id: string }
 };
 
+
 export async function DELETE(request: Request, { params }: Params) {
   const id = parseInt(params.id);
 

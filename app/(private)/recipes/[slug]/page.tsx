@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Typography, Stack, Grid } from '@mui/material'
-import { getRecipeBySlugOrUuid } from '@/model/recipe';
+import { getRecipeBySlugOrUuid, getRecipeProductsWeight } from '@/model/recipe';
 import { unitMap } from '@/constants/units';
 import { getRecipeImagePath } from '@/lib/recipe';
 import RecipeCalculateForm from '../components/RecipeCalculateForm';
@@ -28,6 +28,7 @@ export default async function({ params, searchParams }: PageProps) {
   const slug = (await params).slug;
   const weight = parseInt((await searchParams)?.weight);
   const { recipe, table } = await getRecipeBySlugOrUuid(slug) ?? notFound();
+  const productsWeight = await getRecipeProductsWeight(recipe.id);
   const totals = getTotals();
   const weightFactor = weight / totals.yield;
   const imagePath = getRecipeImagePath(recipe.slug);
@@ -39,6 +40,10 @@ export default async function({ params, searchParams }: PageProps) {
     <Stack p={2} spacing={2} alignItems='flex-start'>
       <Typography variant='h5'>{recipe.name}</Typography>
       <Image src={imagePath} alt={recipe.name} width={400} height={300} />
+      <Typography variant='h6'>Вес продуктов</Typography>
+      <pre>
+        {JSON.stringify(productsWeight, null, 2)}
+      </pre>
       <Typography variant='h6'>Рассчитать на:</Typography>
       <RecipeCalculateForm weight={totals.yield} />
       <Typography variant='h6'>Ингредиенты</Typography>

@@ -1,10 +1,12 @@
 'use client'
 
+import { Fragment } from "react";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { AppEvent, EventPayloadShowAddToCollectionForm } from "@/constants/events";
 
 interface Props {
   id: number;
@@ -17,7 +19,7 @@ export default function RecipeActionsButton({ id, slug }: Props) {
   const router = useRouter();
 
   return (
-    <>
+    <Fragment>
       <IconButton aria-label="settings" onClick={handleClick}>
         <MoreVertIcon />
       </IconButton>
@@ -29,8 +31,9 @@ export default function RecipeActionsButton({ id, slug }: Props) {
       >
         <MenuItem onClick={handleEdit}>Редактировать</MenuItem>
         <MenuItem onClick={handleDelete}>Удалить</MenuItem>
+        <MenuItem onClick={handleAddToCollection}>Добавить в подборку</MenuItem>
       </Menu>
-    </>
+    </Fragment>
   );
 
   function handleClick(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
@@ -57,6 +60,15 @@ export default function RecipeActionsButton({ id, slug }: Props) {
     finally {
       handleClose();
     }
+  }
+
+  async function handleAddToCollection() {
+    const event = new CustomEvent<EventPayloadShowAddToCollectionForm>(
+      AppEvent.Collection.ShowAddToCollectionForm, 
+      { detail: { recipeId: id } }
+    );
+    document.dispatchEvent(event);
+    handleClose();
   }
 }
 
