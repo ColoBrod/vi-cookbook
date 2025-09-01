@@ -158,14 +158,11 @@ export async function getRecipeProductsUuidWeightMap(recipeId: number) {
     }
     else if (item.ingredientType === IngredientType.RECIPE) {
       const subRecipeId = await getRecipeId(item.ingredientUuid) as number;
-      // if (subRecipeId === null)
-      //   throw new Error (`Рецепт с UUID ${item.ingredientUuid} не найден`);
       const subRecipeMap = await getRecipeProductsUuidWeightMap(subRecipeId);
       const subRecipeYield = [...subRecipeMap].reduce((acc, cur) => acc + cur[1], 0);
       const factor = item.amount / subRecipeYield;
       [...subRecipeMap.entries()]
         .forEach(([uuid, weight]) => accumulateWeight(uuid, weight * factor));
-      // subRecipeMap.forEach((value, key) => accu)
     }
   }
 

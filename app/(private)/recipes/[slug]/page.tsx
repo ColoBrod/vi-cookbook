@@ -41,9 +41,11 @@ export default async function({ params, searchParams }: PageProps) {
       <Typography variant='h5'>{recipe.name}</Typography>
       <Image src={imagePath} alt={recipe.name} width={400} height={300} />
       <Typography variant='h6'>Вес продуктов</Typography>
+      {/*
       <pre>
         {JSON.stringify(productsWeight, null, 2)}
       </pre>
+      */}
       <Typography variant='h6'>Рассчитать на:</Typography>
       <RecipeCalculateForm weight={totals.yield} />
       <Typography variant='h6'>Ингредиенты</Typography>
