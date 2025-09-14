@@ -3,18 +3,13 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { CollectionsCreateDto } from "@/types/dto";
-import prisma from "@/lib/prisma";
-// import { PrismaClientKnownRequestError } from "@/app/generated/prisma/runtime/library";
-// import Prisma from "@prisma/client";
-// import { Prisma } from "@/app/generated/prisma";
-// import { PrismaClientKnownRequestError } from "@/app/generated/prisma/runtime/library";
-// import { PrismaClientKnownRequestError } from "@/app/generated/prisma/runtime/library";
-// import { Prisma } from '@prisma/client';
-import { Prisma } from "@/app/generated/prisma";
+import prisma, { isPrismaError } from "@/lib/prisma";
+import { PrismaErrorCode } from "@/types/prisma";
+import { HttpStatus } from "@/lib/http-status";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (session === null) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // const session = await getServerSession(authOptions);
+  // if (session === null) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const collections = await prisma.collection.findMany({
     where: { author: { email: session?.user?.email! } }
@@ -27,7 +22,7 @@ export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (session === null) return NextResponse.json(
     { error: "Не авторизован" }, 
-    { status: 401 }
+    { status: HttpStatus.Unauthorized }
   );
 
   const data = await request.json() as CollectionsCreateDto;
@@ -41,24 +36,17 @@ export async function POST(request: Request) {
         },
       },
     });
-    return NextResponse.json(collection, { status: 200 });
+    return NextResponse.json(collection, { status: HttpStatus.Created });
   }
   catch (e) {
-    console.log("MY FUCKING ERROR")
-    console.log(e);
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+    if (isPrismaError(e) && e.code === PrismaErrorCode.UniqueConstraintFailed) 
       return NextResponse.json(
-        { error: "Подборка с таким именем уже существует!!" },
-        { status: 409 }
+        { error: "Подборка с таким именем уже существует" },
+        { status: HttpStatus.Conflict }
       );
-      // if (e.code === "P2002") return NextResponse.json(
-      //   { error: "Подборка с таким именем уже существует!!" },
-      //   { status: 409 }
-      // );
-    }
     return NextResponse.json(
       { error: 'Внутренняя ошибка сервера'}, 
-      { status: 500 }
+      { status: HttpStatus.InternalServerError }
     );
   }
 }

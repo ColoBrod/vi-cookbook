@@ -7,6 +7,7 @@ import RecipesFilterBar from "./components/RecipesFilterBar";
 import AddToCollectionForm from "./components/AddToCollectionForm";
 import RecipesPagination from "./components/RecipesPagination";
 import { MyPagination } from "@/types/general";
+import { type Prisma } from '@/app/generated/prisma';
 
 interface PageProps {
   searchParams: Promise<{
@@ -20,22 +21,10 @@ interface PageProps {
 const ITEMS_PER_PAGE = 12;
 
 export default async function({ searchParams }: PageProps) {
+
   const filters = await getFilters();
-  const where = {
-    AND: [
-      filters.query 
-        ? { name: { contains: filters.query } } 
-        : {},
-      filters.tags.length > 0
-        ? { tags: { some: { id: { in: filters.tags }} } }
-        : {},
-      filters.author
-        ? { author: { id: filters.author } }
-        : {},
-    ]
-  };
+  const where = getWhereClause(filters);
   const pagination = await getPagination(where);
-  // TODO - фильтры дублируются в getPagination. Это ужОс
   const recipes = await prisma.recipe.findMany({
     where,
     skip: pagination.skip,
@@ -80,7 +69,7 @@ export default async function({ searchParams }: PageProps) {
     </Box>
   );
 
-  async function getPagination(where: any): Promise<MyPagination> {
+  async function getPagination(where: Prisma.RecipeWhereInput): Promise<MyPagination> {
     const pageParam = (await searchParams).page ?? "1"; //.get('page') ?? "1";
     const pageInt = parseInt(pageParam);
     const page = isNaN(pageInt) ? 1 : pageInt;
@@ -97,6 +86,22 @@ export default async function({ searchParams }: PageProps) {
     const query = filters?.query ?? "";
     const author = isNaN(parseInt(filters?.author)) ? 0 : parseInt(filters?.author);
     return { tags, query, author };
+  }
+
+  function getWhereClause(filters: Awaited<ReturnType<typeof getFilters>>): Prisma.RecipeWhereInput {
+    return ({
+      AND: [
+        filters.query 
+          ? { name: { contains: filters.query } } 
+          : {},
+        filters.tags.length > 0
+          ? { tags: { some: { id: { in: filters.tags }} } }
+          : {},
+        filters.author
+          ? { author: { id: filters.author } }
+          : {},
+      ]
+    });
   }
 
 

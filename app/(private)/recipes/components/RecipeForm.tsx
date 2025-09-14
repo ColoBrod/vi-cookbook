@@ -1,56 +1,50 @@
 'use client'
 
 import axios from 'axios';
-import { useEffect, Fragment, useState } from 'react';
-import { TextField, Button, Box, Stack, Autocomplete, Divider, InputLabel, Select, MenuItem, Typography } from "@mui/material";
+import { Fragment, useState } from 'react';
+import { TextField, Button, Box, Stack, Autocomplete, Divider, InputLabel, Select, MenuItem } from "@mui/material";
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import DeleteIcon from "@mui/icons-material/Delete";
-import { IngredientType } from '@/app/generated/prisma';
 import { useRouter } from 'next/navigation';
 import { FormRecipeTag, RecipeJoined } from '@/types/recipes';
 import { FormRecipeItem } from '@/types/recipes';
 import { slugify } from 'transliteration';
-import Image from 'next/image';
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { DEFAULT_RECIPE_IMAGE_URL } from '@/constants/images';
+import { RecipeFormValues, recipeSchema } from '@/lib/validation/recipes';
+import { IngredientType } from '@/app/generated/prisma';
+import { error } from 'console';
 
-export interface FormValues {
-  id?: number;
-  slug?: string;
-  name: string;
-  image: File | null;
-  tags: number[];
-  items: {
-    type?: IngredientType;
-    ingredientUuid?: string;
-    amount?: number;
-  }[];
+interface RecipeFormProps {
+  recipe?: RecipeFormValues;
+  imagePath?: string;
+  items: FormRecipeItem[];
+  tags: FormRecipeTag[];
 }
 
-const defaultValues: FormValues = {
+const defaultValues: RecipeFormValues = {
   slug: "",
   name: "",
+  description: null,
+  instructions: null,
   image: null,
   tags: [],
   items: [],
 }
 
-interface RecipeFormProps {
-  recipe?: FormValues;
-  items: FormRecipeItem[];
-  tags: FormRecipeTag[];
-}
+export default function RecipeForm({ 
+  recipe, items, tags: tagsAvailable, imagePath 
+}: RecipeFormProps) {
 
-export default function RecipeForm({ recipe, items, tags: tagsAvailable }: RecipeFormProps) {
   const router = useRouter();
-  const { 
-    register, getValues, handleSubmit, control, formState: { errors }, reset, setValue, watch
-  } = useForm<FormValues>({ 
-    defaultValues: recipe?.id ? recipe : defaultValues
+  const { register, handleSubmit, control, setValue, getValues } = useForm<RecipeFormValues>({ 
+    resolver: zodResolver(recipeSchema),
+    defaultValues: recipe?.id ? recipe : defaultValues,
   });
   const { fields, append, remove } = useFieldArray({ name: 'items', control });
   const image = register('image');
-  const [imagePreview, setImagePreview] = useState<string>(DEFAULT_RECIPE_IMAGE_URL);
+  const [imagePreview, setImagePreview] = useState(imagePath ?? DEFAULT_RECIPE_IMAGE_URL);
 
   return (
     <Box p={2}>
@@ -60,9 +54,6 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
             <Controller 
               name="name"
               control={control}
-              rules={{ 
-                required: 'Название рецепта обязательно' 
-              }}
               render={({ field, fieldState: {error} }) => (
                 <TextField 
                   {...field}
@@ -86,12 +77,53 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
                 <TextField 
                   {...field}
                   type='text'
-                  label="ID рецепта"
+                  label="Название для ссылки"
                   error={!!error}
                   helperText={error?.message}
                 />
               )}
             />
+            <Controller 
+              name="description"
+              control={control}
+              rules={{}}
+              render={({ field }) => (
+                <TextField 
+                  {...field}
+                  type='text'
+                  multiline
+                  label='Описание'
+                  value={field.value === null ? "" : field.value}
+                  fullWidth
+                  minRows={5}
+                  maxRows={5}
+                  onChange={e => field.onChange(e.target.value || null)}
+                />
+              )}
+            />
+            <Controller 
+              name="instructions"
+              control={control}
+              render={({ field }) => (
+                <TextField 
+                  {...field}
+                  value={field.value === null ? "" : field.value}
+                  type='text'
+                  multiline
+                  label='Инструкции по приготовлению'
+                  fullWidth
+                  minRows={5}
+                  maxRows={5}
+                  onChange={e => field.onChange(e.target.value || null)}
+                />
+              )}
+            />
+            {/*
+            <Controller 
+              name='description'
+              render={({ field, fieldState: { error } }) => (
+            />
+            */}
             <input
               ref={image.ref}
               type="file"
@@ -109,8 +141,6 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
                 setValue('image', file);
                 const imageUrl = URL.createObjectURL(file);
                 setImagePreview(imageUrl);
-                console.log('image url:', imageUrl);
-                console.log('type:', typeof imageUrl);
               }}
             />
             <label htmlFor="upload-image">
@@ -131,8 +161,6 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
               width: 400,
               height: 300,
             }}/>
-            {/*<img src={imagePreview} alt="" width={400} height={300} />*/}
-            {/*<Image src={imagePreview} alt='Recipe image' width={400} height={300} />*/}
             <Controller 
               name='tags'
               control={control}
@@ -160,7 +188,7 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
             <Button
               type="button"
               variant="outlined"
-              onClick={() => append({ ingredientUuid: undefined, amount: undefined, type: undefined })}
+              onClick={() => append({ ingredientUuid: "", amount: 0, type: IngredientType.PRODUCT })}
             >
               Добавить ингредиент
             </Button>
@@ -168,11 +196,10 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
           <Divider />
           <Stack py={2} spacing={2}>
             {fields.map((field, index) => (
-              <Stack direction='row' spacing={1} key={index} alignItems='flex-start'>
+              <Stack direction='row' spacing={1} key={field.id} alignItems='flex-start'>
                 <Controller
                   name={`items.${index}.ingredientUuid`}
                   control={control}
-                  rules={{ required: 'Выбери ингредиент' }}
                   render={({ field: ctrlField, fieldState: { error } }) => (
                     <Autocomplete 
                       options={items}
@@ -181,7 +208,7 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
                         // Обновляем ingredientUuid
                         ctrlField.onChange(val?.uuid ?? "");
                         // Обновляем type соответствующего поля
-                        setValue(`items.${index}.type`, val?.type ?? undefined);
+                        setValue(`items.${index}.type`, val?.type ?? IngredientType.PRODUCT);
                       }}
                       value={items.find((p) => p.uuid === ctrlField.value) ?? null}
                       sx={{ flexGrow: 1 }}
@@ -201,10 +228,6 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
                 <Controller
                   name={`items.${index}.amount`}
                   control={control}
-                  rules={{ 
-                    required: 'Укажи Amount',
-                    min: { value: 0, message: 'Amount не может быть отрицательным' }
-                  }}
                   render={({ field, fieldState: {error} }) => (
                     <TextField 
                       {...field} 
@@ -238,7 +261,7 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
     </Box>
   );
 
-  async function onSubmit(formValues: FormValues): Promise<void> {
+  async function onSubmit(formValues: RecipeFormValues): Promise<void> {
     const formData = new FormData();
     const { image, ...data } = formValues;
     formData.append('data', JSON.stringify(data));
@@ -270,4 +293,5 @@ export default function RecipeForm({ recipe, items, tags: tagsAvailable }: Recip
       
     }
   }
+
 }

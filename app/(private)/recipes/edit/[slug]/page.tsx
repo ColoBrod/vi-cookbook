@@ -1,9 +1,7 @@
 import RecipeForm from "../../components/RecipeForm";
-import prisma from "@/lib/prisma";
 import { getRecipeBySlugOrUuid } from '@/model/recipe';
 import { notFound } from 'next/navigation';
-import { FormValues } from "../../components/RecipeForm";
-import { RecipeJoined } from "@/types/recipes";
+import { RecipeFormValues } from "@/lib/validation/recipes";
 import { getAvailableIngredients } from "@/model/recipe";
 import { getRecipesTags } from "@/model/tags";
 
@@ -15,9 +13,7 @@ type PageProps = {
 
 export default async function({ params }: PageProps) {
   const slug = (await params).slug;
-  // const products = await prisma.product.findMany();
   const [availableIngredients, availableTags, recipeCombined] = await Promise.all([
-    // prisma.product.findMany(),
     getAvailableIngredients(),
     getRecipesTags(),
     getRecipeBySlugOrUuid(slug),
@@ -30,16 +26,24 @@ export default async function({ params }: PageProps) {
   const formValues = mapRecipeToFormValues(recipe);
 
   return (
-    <RecipeForm recipe={formValues} items={availableIngredients} tags={availableTags} />
+    <RecipeForm 
+      recipe={formValues} 
+      imagePath={recipe.imagePath}
+      items={availableIngredients} 
+      tags={availableTags} 
+    />
   );
 
   function mapRecipeToFormValues(
     recipe: NonNullable<Awaited<ReturnType<typeof getRecipeBySlugOrUuid>>>['recipe']
-  ): FormValues {
+  ): RecipeFormValues {
     return ({
       id: recipe.id,
       slug: recipe.slug,
       name: recipe.name,
+      description: recipe.description,
+      instructions: recipe.instructions,
+      image: null,
       items: recipe.items.map(item => ({
         type: item.ingredientType,
         ingredientUuid: item.ingredientUuid,

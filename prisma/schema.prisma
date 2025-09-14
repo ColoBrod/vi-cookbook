@@ -24,14 +24,41 @@ model User {
 }
 
 model Product {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(uuid())
-  slug      String   @unique
-  name      String
-  calories  Float
-  protein   Float
-  fat       Float
-  carbs     Float
+  id   Int    @id @default(autoincrement())
+  uuid String @unique @default(uuid())
+  slug String @unique
+  name String
+
+  calories Float @default(0)
+  protein  Float @default(0)
+  fat      Float @default(0)
+  carbs    Float @default(0)
+  fiber    Float @default(0)
+  sugar    Float @default(0)
+
+  mineralNa Float @default(0)
+  mineralK  Float @default(0)
+  mineralCa Float @default(0)
+  mineralFe Float @default(0)
+  mineralMg Float @default(0)
+  mineralZn Float @default(0)
+  mineralP  Float @default(0)
+  mineralSe Float @default(0)
+
+  vitaminA   Float @default(0)
+  vitaminC   Float @default(0)
+  vitaminD   Float @default(0)
+  vitaminE   Float @default(0)
+  vitaminK   Float @default(0)
+  vitaminB1  Float @default(0)
+  vitaminB2  Float @default(0)
+  vitaminB3  Float @default(0)
+  vitaminB6  Float @default(0)
+  vitaminB9  Float @default(0)
+  vitaminB12 Float @default(0)
+
+  glycemicIndex Float @default(0)
+
   tags      Tag[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -43,8 +70,10 @@ model Recipe {
   slug         String             @unique
   name         String
   imagePath    String             @default("")
-  description  String             @default("")
-  instructions String             @default("")
+  image        Media?             @relation(fields: [imageId], references: [id])
+  imageId      Int?               @unique
+  description  String?            @db.Text
+  instructions String?            @db.Text
   items        RecipeItem[]
   authorId     Int                @default(1)
   author       User               @relation(fields: [authorId], references: [id])
@@ -104,6 +133,17 @@ model CollectionRecipe {
   weight       Int
 
   @@unique([collectionId, recipeId])
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid())
+  slug      String   @unique
+  path      String
+  mimeType  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  recipe    Recipe?
 }
 
 // model Ingredient {

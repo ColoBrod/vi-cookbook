@@ -1,12 +1,14 @@
 'use client'
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { AppEvent, EventPayloadShowAddToCollectionForm } from "@/constants/events";
+import { useConfirm } from "@/app/providers/ConfirmProvider";
+import { useHttpRequest } from "@/hooks/useHttpRequest";
 
 interface Props {
   id: number;
@@ -17,6 +19,9 @@ export default function RecipeActionsButton({ id, slug }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const router = useRouter();
+  const confirm = useConfirm();
+  const makeRequest = useHttpRequest();
+  const menuRef = useRef(null)
 
   return (
     <Fragment>
@@ -24,10 +29,12 @@ export default function RecipeActionsButton({ id, slug }: Props) {
         <MoreVertIcon />
       </IconButton>
       <Menu
+        ref={menuRef}
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
-        onClick={(e) => e.stopPropagation()} // чтобы меню кликом не открывало карточку
+        // onClick={(e) => e.stopPropagation()} // чтобы меню кликом не открывало карточку
+        onSelect={() => handleClose()}
       >
         <MenuItem onClick={handleEdit}>Редактировать</MenuItem>
         <MenuItem onClick={handleDelete}>Удалить</MenuItem>
@@ -50,16 +57,24 @@ export default function RecipeActionsButton({ id, slug }: Props) {
   }
 
   async function handleDelete() {
-    try {
-      await axios.delete(`/api/recipes/${id}`);
-      router.refresh();
-    }
-    catch (e) {
-
-    }
-    finally {
-      handleClose();
-    }
+    handleClose();
+    const ok = await confirm({
+      title: "Удаление рецепта",
+      description: "Ты уверен(а), что хочешь удалить этот рецепт?",
+      confirmText: "Удалить",
+      cancelText: "Отмена",
+    });
+    if (ok === false) return;
+    makeRequest({
+      url: `/api/recipes/${id}`,
+      config: { method: 'delete' },
+      notification: {
+        success: 'Рецепт удален'
+      },
+      callback: {
+        onTry: () => router.refresh(),
+      },
+    });
   }
 
   async function handleAddToCollection() {

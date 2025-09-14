@@ -1,11 +1,17 @@
 import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { Typography, Stack, Grid } from '@mui/material'
+import { Typography, Stack, Grid, Box, Link } from '@mui/material'
 import { getRecipeBySlugOrUuid, getRecipeProductsWeight } from '@/model/recipe';
 import { unitMap } from '@/constants/units';
 import { getRecipeImagePath } from '@/lib/recipe';
 import RecipeCalculateForm from '../components/RecipeCalculateForm';
+import RecipeTag from '../components/RecipeTag';
+import MuiMarkdown from 'mui-markdown';
+import { IngredientType } from '@/app/generated/prisma';
+import NextLink from 'next/link';
+
+// import Link from 'next/link';
 
 interface Totals {
   yield: number;
@@ -28,34 +34,68 @@ export default async function({ params, searchParams }: PageProps) {
   const slug = (await params).slug;
   const weight = parseInt((await searchParams)?.weight);
   const { recipe, table } = await getRecipeBySlugOrUuid(slug) ?? notFound();
-  const productsWeight = await getRecipeProductsWeight(recipe.id);
+  // const productsWeight = await getRecipeProductsWeight(recipe.id);
   const totals = getTotals();
   const weightFactor = weight / totals.yield;
   const imagePath = getRecipeImagePath(recipe.slug);
 
-  console.log('%cWeight:', 'font-size: 20px;')
-  console.log(weight);
+  console.log(table);
 
   return (
     <Stack p={2} spacing={2} alignItems='flex-start'>
+
       <Typography variant='h5'>{recipe.name}</Typography>
-      <Image src={imagePath} alt={recipe.name} width={400} height={300} />
-      <Typography variant='h6'>Вес продуктов</Typography>
-      {/*
-      <pre>
-        {JSON.stringify(productsWeight, null, 2)}
-      </pre>
-      */}
+
+      <Image 
+        src={imagePath} 
+        alt={recipe.name} 
+        width={400} 
+        height={300} 
+        style={{
+          objectFit: "cover",
+          objectPosition: "center",
+        }}
+      />
+
+      <Stack direction='row' spacing={1}>
+        {recipe.tags.map(tag => <RecipeTag key={tag.id} {...tag} disabled />)}
+      </Stack>
+
+      <Stack spacing={1}>
+        <Typography variant='h6'>Описание:</Typography>
+        <Typography variant='body1'>
+          {recipe.description || 'Описание отсутствует'}
+        </Typography>
+      </Stack>
+
+      <Stack spacing={1}>
+        <Typography variant='h6'>Инструкции по приготовлению:</Typography>
+        <MuiMarkdown>
+          {recipe.instructions || 'Иснтрукции отсутствуют'}
+        </MuiMarkdown>
+      </Stack>
+
       <Typography variant='h6'>Рассчитать на:</Typography>
       <RecipeCalculateForm weight={totals.yield} />
+
       <Typography variant='h6'>Ингредиенты</Typography>
       <Grid container spacing={1}>
         {table.map(row => (
           <Fragment key={row.uuid}>
             <Grid size={8}>
-              <Typography>
-                {row.name}
-              </Typography>
+              {
+                row.type === IngredientType.PRODUCT
+                  ? (
+                    <Typography>
+                      {row.name}
+                    </Typography>
+                  )
+                  : (
+                    <Link component={NextLink} href={`/recipes/${row.uuid}`} variant='body1'>
+                      {row.name}
+                    </Link>
+                  )
+              }
             </Grid>
             <Grid size={4}>
               <Typography>
@@ -75,6 +115,7 @@ export default async function({ params, searchParams }: PageProps) {
           </Typography>
         </Grid>
       </Grid>
+
       <Typography variant='h6'>Пищевая ценность</Typography>
       <Stack direction='row' spacing={2}>
         <Typography>
@@ -90,6 +131,7 @@ export default async function({ params, searchParams }: PageProps) {
           Углеводы: {adjustToWeight(totals.carbs).toFixed(2)}
         </Typography>
       </Stack>
+
     </Stack>
   );
 

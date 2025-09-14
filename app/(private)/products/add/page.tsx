@@ -1,4 +1,4 @@
-import ProductForm from "./components/form";
+import ProductForm from "../components/ProductForm.tsx";
 
 export default async function() {
   return (

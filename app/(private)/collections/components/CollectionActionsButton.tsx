@@ -5,6 +5,7 @@ import { IconButton, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useHttpRequest } from '@/hooks/useHttpRequest';
 
 interface Props {
   id: number;
@@ -14,6 +15,7 @@ export default function CollectionActionsButton({ id }: Props) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const router = useRouter();
+  const makeRequest = useHttpRequest();
 
   return (
     <Fragment>
@@ -42,16 +44,31 @@ export default function CollectionActionsButton({ id }: Props) {
   }
 
   async function handleDelete() {
-    try {
-      await axios.delete(`/api/collections/${id}`);
-      router.refresh();
-    }
-    catch (e) {
-
-    }
-    finally {
-      handleClose();
-    }
+    makeRequest({
+      url: `/api/collections/${id}`,
+      config: {
+        method: 'delete',
+      },
+      notification: { success: 'Подборка удалена' },
+      callback: {
+        onTry() {
+          router.refresh();
+        },
+        onFinally() {
+          handleClose();
+        },
+      }
+    })
+    // try {
+    //   await axios.delete(`/api/collections/${id}`);
+    //   router.refresh();
+    // }
+    // catch (e) {
+    //
+    // }
+    // finally {
+    //   handleClose();
+    // }
   }
 }
 

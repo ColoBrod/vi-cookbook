@@ -2,7 +2,7 @@
 
 import { Controller, useForm } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Stack, Button, TextField, InputAdornment } from "@mui/material";
+import { Stack, Button, TextField } from "@mui/material";
 
 interface FormValues {
   weight: number;
@@ -12,7 +12,7 @@ export default function RecipeCalculateForm({ weight }: FormValues) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { getValues, handleSubmit, control, formState: {errors}, reset } = useForm<FormValues>({
+  const { handleSubmit, control, reset } = useForm<FormValues>({
     defaultValues: { weight }
   });
 

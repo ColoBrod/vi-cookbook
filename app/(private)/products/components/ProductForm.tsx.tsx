@@ -5,46 +5,49 @@ import { TextField, Button, Box, Stack } from "@mui/material";
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 
-interface FormValues {
-  slug?: string;
-  name: string;
-  calories?: number;
-  protein?: number;
-  fat?: number;
-  carbs?: number;
-}
+import { productSchema, ProductFormValues } from '@/lib/validation/products';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { slugify } from 'transliteration';
+import { useHttpRequest } from '@/hooks/useHttpRequest';
 
-const defaultValues: FormValues = {
+// interface FormValues {
+//   slug?: string;
+//   name: string;
+//   calories?: number;
+//   protein?: number;
+//   fat?: number;
+//   carbs?: number;
+// }
+
+const defaultValues: ProductFormValues = {
   slug: "",
   name: "",
+  calories: 0,
+  protein: 0,
+  fat: 0,
+  carbs: 0,
 }
 
-export default function ProductForm() {
-  const { handleSubmit, control, formState: { errors }, reset } = useForm<FormValues>({ defaultValues });
+interface ProductFormProps {
+  product?: ProductFormValues;
+}
+
+export default function ProductForm({ product }: ProductFormProps) {
+  const makeRequest = useHttpRequest();
+  const { 
+    handleSubmit, control, formState: { errors }, reset, setValue
+  } = useForm<ProductFormValues>({ 
+    defaultValues: product?.id ? product : defaultValues,
+    resolver: zodResolver(productSchema),
+  });
   const router = useRouter();
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack p={2} spacing={2}>
         <Controller 
-          name="slug"
-          control={control}
-          render={({ field, fieldState: {error} }) => (
-            <TextField 
-              {...field}
-              type='text'
-              label="ID продукта"
-              error={!!error}
-              helperText={error?.message}
-            />
-          )}
-        />
-        <Controller 
           name="name"
           control={control}
-          rules={{ 
-            required: 'Название продукта обязательно' 
-          }}
           render={({ field, fieldState: {error} }) => (
             <TextField 
               {...field}
@@ -53,16 +56,34 @@ export default function ProductForm() {
               label="Название продукта"
               error={!!error}
               helperText={error?.message}
+              onChange={(e) => {
+                const { value } = e.currentTarget;
+                setValue('name', value);
+                setValue('slug', slugify(value));
+              }}
+            />
+          )}
+        />
+        <Controller 
+          name="slug"
+          control={control}
+          render={({ field, fieldState: {error} }) => (
+            <TextField 
+              {...field}
+              type='text'
+              label="Название для ссылки"
+              error={!!error}
+              helperText={error?.message}
             />
           )}
         />
         <Controller 
           name="calories"
           control={control}
-          rules={{ 
-            required: 'Укажи калорийность',
-            min: { value: 0, message: 'Калорийность не может быть отрицательной' }
-          }}
+          // rules={{ 
+          //   required: 'Укажи калорийность',
+          //   min: { value: 0, message: 'Калорийность не может быть отрицательной' }
+          // }}
           render={({ field, fieldState: {error} }) => (
             <TextField 
               {...field}
@@ -78,10 +99,10 @@ export default function ProductForm() {
         <Controller 
           name="protein"
           control={control}
-          rules={{ 
-            required: 'Укажи кол-во белков',
-            min: { value: 0, message: 'Количество белков не может быть отрицательным' }
-          }}
+          // rules={{ 
+          //   required: 'Укажи кол-во белков',
+          //   min: { value: 0, message: 'Количество белков не может быть отрицательным' }
+          // }}
           render={({ field, fieldState: {error} }) => (
             <TextField 
               {...field}
@@ -97,10 +118,10 @@ export default function ProductForm() {
         <Controller 
           name="fat"
           control={control}
-          rules={{ 
-            required: 'Укажи кол-во жиров',
-            min: { value: 0, message: 'Количество жиров не может быть отрицательным' }
-          }}
+          // rules={{ 
+          //   required: 'Укажи кол-во жиров',
+          //   min: { value: 0, message: 'Количество жиров не может быть отрицательным' }
+          // }}
           render={({ field, fieldState: {error} }) => (
             <TextField 
               {...field}
@@ -116,10 +137,10 @@ export default function ProductForm() {
         <Controller 
           name="carbs"
           control={control}
-          rules={{ 
-            required: 'Укажи кол-во углеводов',
-            min: { value: 0, message: 'Количество углеводов не может быть отрицательным' }
-          }}
+          // rules={{ 
+          //   required: 'Укажи кол-во углеводов',
+          //   min: { value: 0, message: 'Количество углеводов не может быть отрицательным' }
+          // }}
           render={({ field, fieldState: {error} }) => (
             <TextField 
               {...field}
@@ -167,14 +188,41 @@ export default function ProductForm() {
     </form>
   );
 
-  function onSubmit(data: FormValues): void {
-    axios.post('/api/products', data)
-      .then(() => router.push('/products'));
+  function onSubmit(data: ProductFormValues): void {
+    const url = product ? `/api/products/${product.id}` : `/api/products`;
+    const config = {
+      method: product ? 'put' : 'post',
+      data,
+    };
+    const callback = {
+      onTry: () => router.push('/products'),
+    };
+    const notification = {
+      success: product 
+        ? `Продукт "${product.name}" обновлен`
+        : `Продукт создан`,
+    };
+    makeRequest({ url, config, callback, notification });
+
+    // if (product) {
+    //   makeRequest({
+    //     url: '/api/products',
+    //     config: {
+    //
+    //     }
+    //
+    //   })
+    // }
+    // else {
+    //
+    // }
+    // axios.post('/api/products', data)
+    //   .then(() => router.push('/products'));
   }
 
-  function onError(data: FormValues): void {
-    console.log(data);
-  }
+  // function onError(data: FormValues): void {
+  //   console.log(data);
+  // }
 
   /*
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

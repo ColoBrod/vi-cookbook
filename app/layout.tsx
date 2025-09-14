@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import './globals.css';
 import Providers from "./providers";
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 export const metadata: Metadata = {
   title: "CookBook for Vi",
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>
-          {children}
-        </Providers>
+        <NuqsAdapter>
+          <Providers>
+            {children}
+          </Providers>
+        </NuqsAdapter>
       </body>
     </html>
   );

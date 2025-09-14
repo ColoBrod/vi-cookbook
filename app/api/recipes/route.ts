@@ -4,25 +4,51 @@ import prisma from "@/lib/prisma";
 import { RecipesAddDto } from "@/types/dto";
 import { Unit } from "@/app/generated/prisma";
 import { sendTelegramMessage } from "@/lib/tg/sendTelegramMessage";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { storeImage } from "@/lib/images";
+import { HttpStatus } from "@/lib/http-status";
+import { getUserId } from "@/lib/user";
+import { CreateRecipeDto, recipeSchema } from "@/lib/validation/recipes";
+
+export async function GET(request: Request) {
+  const recipes = await prisma.recipe.findMany();
+  return NextResponse.json(recipes, { status: HttpStatus.Ok });
+}
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (session === null) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // const data = await request.json() as RecipesAddDto;
+  const userId = getUserId(request);
+
   const formData = await request.formData();
-  const image = formData.get('image') as File;
+  const image = formData.get('image');
   const json = formData.get('data') as string;
-  const data = JSON.parse(json) as RecipesAddDto;
-  const imagePath = await storeImage(image, data);
 
-  const recipe = await prisma.recipe.create({
+  let parsed: CreateRecipeDto;
+
+  try { parsed = JSON.parse(json) }
+  catch {
+    return NextResponse.json(
+      { error: 'Отсутствуют данные для создания рецепта' },
+      { status: HttpStatus.BadRequest }
+    );
+  }
+
+  const validation = recipeSchema.safeParse({ ...parsed, image });
+
+  if (validation.success === false) return NextResponse.json(
+    { error: validation.error }, 
+    { status: HttpStatus.BadRequest }
+  );
+
+  const { data } = validation;
+
+  const imagePath = image instanceof File ? await storeImage(image, data) : "";
+
+  const created = await prisma.recipe.create({
     data: {
       slug: data.slug,
       name: data.name,
+      description: data.description,
+      instructions: data.instructions,
       imagePath,
       items: {
         create: data.items.map(item => ({
@@ -36,7 +62,7 @@ export async function POST(request: Request) {
         connect: data.tags.map(tagId => ({ id: tagId })),
       },
       author: {
-        connect: { email: session?.user?.email! }
+        connect: { id: userId }
       }
     },
     include: {
@@ -46,7 +72,17 @@ export async function POST(request: Request) {
     },
   });
 
-  await sendTelegramMessage(`Пользователь создал новый рецепт. Просмотреть: http://192.168.1.2:3000/recipes/${recipe.slug}`);
-  return NextResponse.json(recipe, { status: 200 });
+  const recipe = await prisma.recipe.findUnique({
+    where: {
+      id: created.id
+    }
+  });
+
+  await sendTelegramMessage(`Пользователь создал новый рецепт. Просмотреть: http://192.168.1.2:3000/recipes/${created.slug}`, imagePath);
+
+  return NextResponse.json(
+    recipe, 
+    { status: HttpStatus.Created }
+  );
 }
 

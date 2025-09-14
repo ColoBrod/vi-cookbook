@@ -1,13 +1,11 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import axios, { AxiosError, AxiosResponse } from "axios";
 import { Dialog, DialogTitle, DialogContent, Stack, Button, TextField } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { AppEvent } from "@/constants/events";
 import { useRouter } from "next/navigation";
-import { useSnackbar } from "notistack";
-import { CollectionsCreateDto } from "@/types/dto";
+import { useHttpRequest } from "@/hooks/useHttpRequest";
 
 interface FormValues {
   name: string;
@@ -23,7 +21,7 @@ export default function() {
   const [visible, setVisible] = useState(false);
   const title = 'Создать новую подборку';
   useEffect(handleMounted, []);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const makeRequest = useHttpRequest();
 
   return (
     <Dialog open={visible} onClose={handleClose}>
@@ -56,24 +54,42 @@ export default function() {
   );
 
   async function onSubmit(formValues: FormValues): Promise<void> {
-    const closeEvent = new Event(AppEvent.Collection.HideCreateForm);
-    try {
-      await axios.post(`/api/collections`, formValues);
-      enqueueSnackbar('Добавлена новая подборка', { variant: 'success' })
-      router.refresh();
-    }
-    catch (err) {
-      const error = err as AxiosError<{ error: string; }>
-      if (error.response?.data?.error) {
-        enqueueSnackbar(error.response.data.error, { variant: 'error' })
-      }
-      else {
-        enqueueSnackbar('Уууупс... Что-то пошло не так', { variant: 'error' })
-      }
-    }
-    finally {
-      document.dispatchEvent(closeEvent);
-    }
+
+    makeRequest<FormValues>({
+      url: `/api/collections`,
+      config: {
+        method: 'post',
+        data: formValues,
+      },
+      notification: { success: 'Подборка успешно создана' },
+      callback: {
+        onTry() {
+          router.refresh();
+        },
+        onFinally() {
+          const closeEvent = new Event(AppEvent.Collection.HideCreateForm);
+          document.dispatchEvent(closeEvent);
+        },
+      },
+    });
+
+    // try {
+    //   await axios.post(`/api/collections`, formValues);
+    //   enqueueSnackbar('Добавлена новая подборка', { variant: 'success' })
+    //   router.refresh();
+    // }
+    // catch (err) {
+    //   const error = err as AxiosError<{ error: string; }>
+    //   if (error.response?.data?.error) {
+    //     enqueueSnackbar(error.response.data.error, { variant: 'error' })
+    //   }
+    //   else {
+    //     enqueueSnackbar('Уууупс... Что-то пошло не так', { variant: 'error' })
+    //   }
+    // }
+    // finally {
+    //   document.dispatchEvent(closeEvent);
+    // }
   }
 
   function handleOpen() {

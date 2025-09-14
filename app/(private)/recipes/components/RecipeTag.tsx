@@ -4,7 +4,11 @@ import { Chip } from "@mui/material";
 import { Tag } from "@/app/generated/prisma"
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function RecipeTag({ id, name }: Tag) {
+interface RecipeTagProps extends Tag {
+  disabled?: boolean;
+}
+
+export default function RecipeTag({ id, name, disabled = false }: RecipeTagProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -14,7 +18,7 @@ export default function RecipeTag({ id, name }: Tag) {
       label={name} 
       variant='outlined' 
       clickable  
-      onClick={handleClick}
+      onClick={disabled ? undefined : handleClick}
     />
   );
 
