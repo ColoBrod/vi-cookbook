@@ -36,6 +36,9 @@ model Product {
   fiber    Float @default(0)
   sugar    Float @default(0)
 
+  omega3 Float @default(0)
+  omega6 Float @default(0)
+
   mineralNa Float @default(0)
   mineralK  Float @default(0)
   mineralCa Float @default(0)
@@ -56,6 +59,16 @@ model Product {
   vitaminB6  Float @default(0)
   vitaminB9  Float @default(0)
   vitaminB12 Float @default(0)
+
+  valine        Float @default(0) // Валин → 
+  isoleucine    Float @default(0) // Изолейцин → 
+  leucine       Float @default(0) // Лейцин → 
+  lysine        Float @default(0) // Лизин → 
+  methionine    Float @default(0) // Метионин → 
+  threonine     Float @default(0) // Треонин → 
+  tryptophan    Float @default(0) // Триптофан → 
+  phenylalanine Float @default(0) // Фенилаланин → 
+  histidine     Float @default(0) // Гистидин → 
 
   glycemicIndex Float @default(0)
 

@@ -12,9 +12,10 @@ type Params = {
 export async function DELETE(request: Request, { params }: Params) {
   const id = parseInt((await params).id);
 
-  if (isNaN(id)) {
-    return NextResponse.json({ error: "Invalid recipe id" }, { status: 400 });
-  }
+  if (isNaN(id)) return NextResponse.json(
+    { error: "Некорректный идентификатор рецепта" }, 
+    { status: HttpStatus.BadRequest }
+  );
 
   await prisma.recipe.delete({ where: { id } });
   return NextResponse.json({ status: 200 });
@@ -28,21 +29,30 @@ export async function PUT(request: Request, { params }: Params) {
     { status: HttpStatus.BadRequest }
   );
 
-  const formData = await request.formData();
-  const image = formData.get('image');
-  const json = formData.get('data') as string;
+  // const formData = await request.formData();
+  // const image = formData.get('image');
+  // const json = formData.get('data') as string;
+  //
+  // let parsed: UpdateRecipeDto;
+  //
+  // try { parsed = JSON.parse(json) }
+  // catch {
+  //   return NextResponse.json(
+  //     { error: 'Отсутствуют данные для обновления рецепта' },
+  //     { status: HttpStatus.BadRequest }
+  //   );
+  // }
 
   let parsed: UpdateRecipeDto;
-
-  try { parsed = JSON.parse(json) }
+  try { parsed = await request.json() }
   catch {
     return NextResponse.json(
-      { error: 'Отсутствуют данные для обновления рецепта' },
+      { error: 'Отсутствуют данные для обновления продукта' },
       { status: HttpStatus.BadRequest }
     );
   }
 
-  const validation = recipeSchema.safeParse({ ...parsed, image });
+  const validation = recipeSchema.safeParse(parsed);
 
   if (validation.success === false) return NextResponse.json(
     { error: validation.error }, 
@@ -51,8 +61,8 @@ export async function PUT(request: Request, { params }: Params) {
 
   const { data } = validation;
 
-  let imagePath: string | undefined;
-  if (image instanceof File) imagePath = await storeImage(image, data);
+  // let imagePath: string | undefined;
+  // if (image instanceof File) imagePath = await storeImage(image, data);
 
   const updated = await prisma.recipe.update({
     where: { id },
@@ -61,7 +71,8 @@ export async function PUT(request: Request, { params }: Params) {
       name: data.name,
       description: data.description,
       instructions: data.instructions,
-      ...(imagePath && { imagePath }),
+      imageId: data.imageId,
+      // ...(imagePath && { imagePath }),
       items: {
         deleteMany: {}, // удалить все старые
         create: data.items.map(item => ({
@@ -83,5 +94,8 @@ export async function PUT(request: Request, { params }: Params) {
 
   const recipe = await prisma.recipe.findUnique({ where: { id: updated.id } });
 
-  return NextResponse.json(recipe, { status: HttpStatus.Ok });
+  return NextResponse.json(
+    recipe, 
+    { status: HttpStatus.Ok }
+  );
 }

@@ -5,7 +5,7 @@ import { HttpStatus } from "@/lib/http-status";
 import { storeImageV2 } from "@/lib/images";
 import { ImageMimeType } from "@/types/images";
 import { v4 as uuidv4 } from 'uuid';
-import { mimeToExt } from "@/constants/images";
+import { MAX_FILE_SIZE, ACCEPTED_MIME_TYPES } from "@/constants/images";
 
 /**
  * Сохраняет изображение в uploads
@@ -15,18 +15,19 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get('file');
 
+  console.log(formData);
+
   if (file instanceof File === false) return NextResponse.json(
     { error: "Expected file" }, 
     { status: HttpStatus.BadRequest }
   );
 
-  // @ts-ignore
-  if (mimeToExt.has(file.type) === false) return NextResponse.json(
+  if (ACCEPTED_MIME_TYPES.includes(file.type) === false) return NextResponse.json(
     { error: "Bad Mime Type" }, 
     { status: HttpStatus.BadRequest }
   );
   
-  if (file.size > 100 * 1024) return NextResponse.json(
+  if (file.size > MAX_FILE_SIZE) return NextResponse.json(
     { error: 'Размер файла не должен превышать 100 KB' },
     { status: HttpStatus.PayloadTooLarge },
   );

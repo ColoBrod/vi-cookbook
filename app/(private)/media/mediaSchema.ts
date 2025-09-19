@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import { mimeToExt } from '@/constants/images';
-
-export const MAX_FILE_SIZE = 5 * 1024 * 1024;
-export const ACCEPTED_MIME_TYPES: string[] = [...mimeToExt.keys()];
+import { MAX_FILE_SIZE, ACCEPTED_MIME_TYPES, ACCEPTED_EXTENSIONS } from '@/constants/images';
 
 export const mediaSchema = z.object({
   file: z
@@ -11,7 +8,7 @@ export const mediaSchema = z.object({
       message: 'Загружаемое изображение слишком большое (максимум 5МБ)'
     })
     .refine((file) => ACCEPTED_MIME_TYPES.includes(file.type), {
-      message: 'Недопустимый формат изображения'
+      message: `Недопустимый формат изображения (допустимы: ${ACCEPTED_EXTENSIONS.join(', ')})`
     })
     .or(z.null()),
 });

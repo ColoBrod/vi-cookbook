@@ -3,7 +3,8 @@ import TopPanel from "@/app/components/TopPanel";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-// import { SessionProvider } from "next-auth/react";
+import SideMenu from '../components/SideMenu';
+import { hiddenScrollbarProps } from '@/constants/hide-scrollbar';
 
 export default async function({
   children
@@ -16,9 +17,10 @@ export default async function({
   return (
     <Box height='100dvh' display='flex' flexDirection='column'>
       <TopPanel />
-      <Box flexGrow={1} overflow='auto'>
+      <Box flexGrow={1} overflow='auto' sx={{...hiddenScrollbarProps}}>
         {children}
       </Box>
+      <SideMenu />
     </Box>
   );
 }

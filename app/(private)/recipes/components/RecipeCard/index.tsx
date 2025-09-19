@@ -4,15 +4,17 @@ import {
 } from '@mui/material';
 import RecipeActionsButton from "../RecipeActionsButton";
 import Link from "next/link";
-import { Recipe, Tag, User } from "@/app/generated/prisma";
+import { Recipe, Tag, User, Media } from "@/app/generated/prisma";
 import { getRecipeImagePath } from '@/lib/recipe';
 import Description from './Description';
 import Tags from './Tags';
 import IconBar from './IconBar';
+import { DEFAULT_RECIPE_IMAGE_URL } from '@/constants/images';
 
 interface RecipeWithAuthorAndTags extends Recipe {
   author: User;
   tags: Tag[];
+  image: Media | null;
 }
 
 interface RecipeCardProps {
@@ -20,7 +22,7 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
-  const imagePath = getRecipeImagePath(recipe.slug);
+  // const imagePath = getRecipeImagePath(recipe.slug);
 
   return (
     <Card>
@@ -40,7 +42,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         <CardMedia
           component="img"
           height="194"
-          image={imagePath}
+          image={recipe.image ? recipe.image.path : DEFAULT_RECIPE_IMAGE_URL}
           alt={recipe.name}
         />
       </CardActionArea>

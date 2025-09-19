@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 
 import { createUsers } from "./seed-users";
+import { createMedia } from "./seed-media";
 import { createProducts } from "./seed-products";
 import { createTags } from "./seed-tags";
 import { createRecipes } from "./seed-recipes";
@@ -17,6 +18,7 @@ main()
 
 async function main() {
   await createUsers();
+  await createMedia();
   await createProducts();
   await createTags();
   await createRecipes();

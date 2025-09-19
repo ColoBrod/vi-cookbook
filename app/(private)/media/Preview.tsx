@@ -1,15 +1,15 @@
-import { Box, Button, IconButton, Stack } from "@mui/material";
+import { Box, Button, IconButton, Stack, LinearProgress, Typography } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useFormContext } from "react-hook-form";
+import { UploadState } from "./uploadReducer";
 
-interface PreviewProps {
-  url: string;
-  // reset: UseFormReset<MediaFormValues>;
-}
+interface PreviewProps extends UploadState {}
 
-export default function Preview({ url }: PreviewProps) {
+export default function Preview({ 
+  previewUrl: url, progress, completed, error
+}: PreviewProps) {
   const { reset } = useFormContext();
 
   const controlButtons = url === ''
@@ -57,10 +57,24 @@ export default function Preview({ url }: PreviewProps) {
       </Stack>
     );
 
+  const progressOverlay = (
+    <Box 
+      height='100%' bgcolor='rgba(255,255,255, 0.8)' 
+      display='flex' alignItems='center' justifyContent='center'
+    >
+      <Stack width='80%' spacing={1}>
+        <Typography variant="body2" textAlign='center'>
+          Загрузка: {progress}
+        </Typography>
+        <LinearProgress variant="determinate" value={progress} />
+      </Stack>
+    </Box>
+  )
+
   return (
     <Box sx={{
-      width: 400,
-      height: 300,
+      height: '100%',
+      aspectRatio: '4 / 3',
       backgroundImage: url ? `url(${url})` : undefined,
       backgroundPosition: 'center',
       backgroundSize: 'cover',
@@ -68,7 +82,9 @@ export default function Preview({ url }: PreviewProps) {
       boxSizing: 'border-box',
       borderRadius: 1,
     }}>
-      {controlButtons}
+      {progress > 0 && progress < 100 
+        ? progressOverlay
+        : controlButtons}
     </Box>
   );
 }

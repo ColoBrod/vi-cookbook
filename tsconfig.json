@@ -13,6 +13,11 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+
+    // Эти 2 строки отвечают за декораторы
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     "plugins": [
       {
         "name": "next"

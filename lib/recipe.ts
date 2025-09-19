@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 
+/**
+ * @deprecated
+ */
 export function getRecipeImagePath(slug: string): string {
   const fullPath = path.join(process.cwd(), "public", "recipes", `${slug}.jpg`);
   const imageExists = fs.existsSync(fullPath);

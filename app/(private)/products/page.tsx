@@ -12,23 +12,23 @@ interface PageProps {
   searchParams: Promise<SearchParams>;
 }
 
-
 export default async function({ searchParams }: PageProps) {
 
   const sp = await loadSearchParams(searchParams);
 
   const pagination = await getPagination();
+  const orderBy = getOrderBy();
 
   // let orderBy: Prisma.ProductOrderByWithRelationInput;
 
   const products = await prisma.product.findMany({
     skip: pagination.skip,
     take: pagination.take,
-    // orderBy:
+    orderBy,
   });
 
   return (
-    <Box p={2} position='relative'>
+    <Box p={2} pb={12} position='relative'>
       <ProductsTable rows={products} pagination={pagination} />
       <Fab 
         LinkComponent={Link}

@@ -7,7 +7,7 @@ export const recipeSchema = z.object({
   name: z.string().min(2, "Название рецепта обязательно"),
   description: z.string().min(1).or(z.null()),
   instructions: z.string().min(1).or(z.null()),
-  image: z.instanceof(File).or(z.null()),
+  imageId: z.number().or(z.null()),
   tags: z.array(z.number()),
   items: z.array(z.object({
     type: z.enum(IngredientType), // можно уточнить enum из IngredientType
@@ -15,18 +15,6 @@ export const recipeSchema = z.object({
     amount: z.number().min(0, "Amount не может быть отрицательным"),
   })),
 });
-
-// const num: number = "str";
-
-// export const updateRecipeSchema = recipeSchema.extend({
-//   image: 
-// })
-
-// const patchRecipeScheme = recipeSchema.partial();
-
-// export const createRecipeDtoSchema = recipeSchema.omit({
-//   image: true
-// });
 
 export type RecipeFormValues = z.infer<typeof recipeSchema>;
 export type CreateRecipeDto = z.infer<typeof recipeSchema>;

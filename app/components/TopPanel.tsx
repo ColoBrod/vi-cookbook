@@ -1,46 +1,37 @@
+'use client'
+
+import { Fragment } from "react";
 import { AppBar, Toolbar, Button, Typography, Stack, Box } from "@mui/material";
 import Link from "next/link";
 import { AppLink } from "@/types/links";
 import GoBackButton from "./GoBackButton";
-import SignOutButton from "./SignOutButton";
 import UserButton from "./UserButton";
+import { pages } from "@/constants/navigation";
+import BreakpointsHelper from "./BreakpointsHelper";
+import { appEnv } from "@/lib/environment";
+import SideMenuButton from "./SideMenuButton";
+import { useWidth } from "@/hooks/useWidth";
 
 export default function TopPanel() {
+  const size = useWidth();
+  const isMobile = size === 'xs';
+  const isDesktop = size !== 'xs';
+
   return (
     <AppBar position="static">
       <Toolbar>
-        <GoBackButton />
-        <Button color="inherit" component={Link} href={AppLink.Products}>
-          Продукты
-        </Button>
-        <Button color="inherit" component={Link} href={AppLink.Recipes}>
-          Рецепты
-        </Button>
-        <Button color="inherit" component={Link} href={AppLink.Collections}>
-          Подборки
-        </Button>
-        <Button color="inherit" component={Link} href={AppLink.Categories}>
-          Категории
-        </Button>
-        {/*<SignOutButton />*/}
+        {isMobile && <SideMenuButton />}
+        {isDesktop && <GoBackButton />}
+        {isDesktop && [...pages.entries()].map(([href, name]) => (
+          <Button key={href} color="inherit" component={Link} href={href}>
+            {name}
+          </Button>
+        ))}
         <Box display='flex' justifyContent='flex-end' sx={{ flexGrow: 1 }}>
+          {/* <BreakpointsHelper /> */}
           <UserButton />
         </Box>
-
       </Toolbar>
-      {/*
-      <Stack direction='row' spacing={1}>
-        <Typography>
-          <Link href={AppLink.Products}>Продукты</Link>
-        </Typography>
-        <Typography>
-          <Link href={AppLink.Recipes}>Рецепты</Link>
-        </Typography>
-        <Typography>
-          <Link href={AppLink.Categories}>Категории</Link>
-        </Typography>
-      </Stack>
-      */}
     </AppBar>
   );
 }

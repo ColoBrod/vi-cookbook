@@ -1,6 +1,8 @@
 'use client'
 
-import { DataGrid, GridCallbackDetails, GridPaginationModel } from '@mui/x-data-grid';
+import { Fragment, useState } from 'react';
+
+import { DataGrid, GridCallbackDetails, GridColumnVisibilityModel, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
 import { Product } from '@/app/generated/prisma';
 import { columns } from './columns';
 import { MyPagination } from '@/types/general';
@@ -8,6 +10,7 @@ import { gridToPrismaPaginationModel, myToGridPaginationModel } from '@/lib/tabl
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { useSnackbar } from 'notistack';
+import ColumnGroups from './ColumnGroups';
 
 interface ProductsTableProps {
   rows: Product[];
@@ -20,19 +23,27 @@ export default function ProductsTable({ rows, pagination }: ProductsTableProps) 
   const searchParams = useSearchParams();
   const paginationModel = myToGridPaginationModel(pagination);
   const { enqueueSnackbar } = useSnackbar();
+  // const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({});
 
   return (
-    <DataGrid 
-      rows={rows}
-      columns={columns}
-      disableRowSelectionOnClick
-      paginationMode='server'
-      paginationModel={paginationModel}
-      rowCount={pagination.total}
-      pageSizeOptions={[10, 20, 50]}
-      onPaginationModelChange={handlePaginationModelChange}
-      processRowUpdate={processRowUpdate}
-    />
+    <Fragment>
+      {/* <ColumnGroups /> */}
+      <DataGrid 
+        showToolbar
+        rows={rows}
+        columns={columns}
+        disableRowSelectionOnClick
+        paginationMode='server'
+        paginationModel={paginationModel}
+        rowCount={pagination.total}
+        pageSizeOptions={[10, 20, 50]}
+        onPaginationModelChange={handlePaginationModelChange}
+        processRowUpdate={processRowUpdate}
+        sortingMode='server'
+        onSortModelChange={handleSortModelChange}
+        // columnVisibilityModel={columnVisibilityModel}
+      />
+    </Fragment>
   );
 
   async function processRowUpdate(newRow: Product, oldRow: Product): Promise<Product> {
@@ -75,6 +86,20 @@ export default function ProductsTable({ rows, pagination }: ProductsTableProps) 
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
     params.set('take', take.toString());
+    router.push(`?${params.toString()}`);
+  }
+
+  function handleSortModelChange(model: GridSortModel, details: GridCallbackDetails): void {
+    console.log(model);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (model.length === 0) {
+      params.delete('orderBy');
+      return;
+    }
+    const sortItem = model[0];
+    console.log(sortItem);
+    params.set('orderBy', `${sortItem.field}:${sortItem.sort}`);
     router.push(`?${params.toString()}`);
   }
 

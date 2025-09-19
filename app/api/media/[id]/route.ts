@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { deleteImage, storeImageV2 } from "@/lib/images";
 import { v4 as uuidv4 } from 'uuid';
 import { mimeToExt } from "@/constants/images";
+import { MAX_FILE_SIZE, ACCEPTED_MIME_TYPES } from "@/constants/images";
 
 type Params = {
   params: Promise<{ id: string }>
@@ -50,13 +51,12 @@ export async function PUT(request: Request, { params }: Params) {
     { status: HttpStatus.BadRequest }
   );
 
-  // @ts-ignore
-  if (mimeToExt.has(file.type) === false) return NextResponse.json(
+  if (ACCEPTED_MIME_TYPES.includes(file.type) === false) return NextResponse.json(
     { error: "Bad Mime Type" }, 
     { status: HttpStatus.BadRequest }
   );
   
-  if (file.size > 100 * 1024) return NextResponse.json(
+  if (file.size > MAX_FILE_SIZE) return NextResponse.json(
     { error: 'Размер файла не должен превышать 100 KB' },
     { status: HttpStatus.PayloadTooLarge },
   );

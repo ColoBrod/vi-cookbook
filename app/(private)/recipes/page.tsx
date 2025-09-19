@@ -29,7 +29,7 @@ export default async function({ searchParams }: PageProps) {
     where,
     skip: pagination.skip,
     take: pagination.take,
-    include: { author: true, tags: true }
+    include: { author: true, image: true, tags: true }
   });
   const tagsAvailable = await prisma.tag.findMany({ where: { isRecipe: true } });
   const authors = await prisma.user.findMany();
@@ -40,6 +40,7 @@ export default async function({ searchParams }: PageProps) {
         authors={authors}
         tagsAvailable={tagsAvailable}
       />
+
       <Grid container spacing={2}>
         {recipes.map(recipe => (
           <Grid 

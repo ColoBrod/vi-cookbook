@@ -10,6 +10,7 @@ import RecipeTag from '../components/RecipeTag';
 import MuiMarkdown from 'mui-markdown';
 import { IngredientType } from '@/app/generated/prisma';
 import NextLink from 'next/link';
+import { DEFAULT_RECIPE_IMAGE_URL } from '@/constants/images';
 
 // import Link from 'next/link';
 
@@ -37,7 +38,7 @@ export default async function({ params, searchParams }: PageProps) {
   // const productsWeight = await getRecipeProductsWeight(recipe.id);
   const totals = getTotals();
   const weightFactor = weight / totals.yield;
-  const imagePath = getRecipeImagePath(recipe.slug);
+  // const imagePath = getRecipeImagePath(recipe.slug);
 
   console.log(table);
 
@@ -47,7 +48,7 @@ export default async function({ params, searchParams }: PageProps) {
       <Typography variant='h5'>{recipe.name}</Typography>
 
       <Image 
-        src={imagePath} 
+        src={recipe.image ? recipe.image.path : DEFAULT_RECIPE_IMAGE_URL} 
         alt={recipe.name} 
         width={400} 
         height={300} 

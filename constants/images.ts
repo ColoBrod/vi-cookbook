@@ -11,3 +11,15 @@ export const mimeToExt = new Map<ImageMimeType, ImageExtension>([
   // ['image/gif'    , 'gif'],
   // ['image/svg+xml', 'svg'],
 ]);
+
+// export const mimeRec: Record<ImageMimeType, ImageExtension> = {
+//   'image/jpeg': 'jpg',
+//   'image/jpg':   'jpg',
+//   'image/png':   'png',
+//   'image/webp':  'webp',
+//   'image/bmp':   'bmp',
+// }
+
+export const MAX_FILE_SIZE = 5 * 1024 * 1024;
+export const ACCEPTED_MIME_TYPES: string[] = [...mimeToExt.keys()];
+export const ACCEPTED_EXTENSIONS: string[] = [...mimeToExt.values()];

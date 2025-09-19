@@ -28,7 +28,8 @@ export default async function({ params }: PageProps) {
   return (
     <RecipeForm 
       recipe={formValues} 
-      imagePath={recipe.imagePath}
+      image={recipe.image}
+      // imagePath={recipe.imagePath}
       items={availableIngredients} 
       tags={availableTags} 
     />
@@ -43,7 +44,7 @@ export default async function({ params }: PageProps) {
       name: recipe.name,
       description: recipe.description,
       instructions: recipe.instructions,
-      image: null,
+      imageId: recipe.imageId,
       items: recipe.items.map(item => ({
         type: item.ingredientType,
         ingredientUuid: item.ingredientUuid,

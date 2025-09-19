@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { IngredientType, Unit } from "@/app/generated/prisma";
 import { ProductUuid } from "./seed-products";
 import { RecipeTag } from "./seed-tags";
+import { MediaUuid } from "./seed-media";
 
 export enum RecipeUuid {
   Borscht = '3236caa8-4166-4c7a-9e1c-4eab16fedf18',
@@ -17,9 +18,12 @@ export async function createRecipes() {
     data: {
       slug: 'borshch-klassicheskiy',
       name: 'Борщ классический',
-      imagePath: "/recipes/borshch-klassicheskiy.jpg",
+      // imagePath: "/recipes/borshch-klassicheskiy.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.BorshchKlassicheskiy } 
       },
       items: {
         create: [
@@ -129,6 +133,7 @@ export async function createRecipes() {
       },
     },
     include: {
+      image: true,
       author: true,
       items: true,
       tags: true,
@@ -139,9 +144,12 @@ export async function createRecipes() {
     data: {
       slug: 'rassolnik',
       name: 'Рассольник',
-      imagePath: "/recipes/rassolnik.jpg",
+      // imagePath: "/recipes/rassolnik.jpg",
       author: {
         connect: { email: 'vi@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.Rassolnik } 
       },
       items: {
         create: [
@@ -240,6 +248,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -249,9 +258,12 @@ export async function createRecipes() {
     data: {
       slug: 'mushroom-cream-soup',
       name: 'Грибной Суп-крем',
-      imagePath: "/recipes/mushroom-cream-soup.jpg",
+      // imagePath: "/recipes/mushroom-cream-soup.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.MushroomCreamSoup } 
       },
       items: {
         create: [
@@ -337,6 +349,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -346,9 +359,12 @@ export async function createRecipes() {
     data: {
       slug: 'tofu-scrambled',
       name: 'Тофу-скрэмбл',
-      imagePath: "/recipes/tofu-scrambled.jpg",
+      // imagePath: "/recipes/tofu-scrambled.jpg",
       author: {
         connect: { email: 'vi@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.TofuScrambled } 
       },
       items: {
         create: [
@@ -428,6 +444,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -437,9 +454,12 @@ export async function createRecipes() {
     data: {
       slug: 'lentil-soup',
       name: 'Чечевичный суп',
-      imagePath: "/recipes/lentil-soup.jpg",
+      // imagePath: "/recipes/lentil-soup.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.LentilSoup } 
       },
       items: {
         create: [
@@ -519,6 +539,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -528,9 +549,12 @@ export async function createRecipes() {
     data: {
       slug: 'schi',
       name: 'Щи',
-      imagePath: "/recipes/schi.webp",
+      // imagePath: "/recipes/schi.webp",
       author: {
         connect: { email: 'vi@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.Schi } 
       },
       items: {
         create: [
@@ -641,6 +665,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -651,7 +676,7 @@ export async function createRecipes() {
       slug: 'sweet-mustard-sauce',
       name: 'Соус сладкая горчица',
       uuid: RecipeUuid.SweetMustardSauce,
-      imagePath: "/recipes/schi.jpg",
+      // imagePath: "/recipes/schi.jpg",
       author: {
         connect: { email: 'vi@cookbook.com' },
       },
@@ -701,7 +726,7 @@ export async function createRecipes() {
       slug: 'pesto-rosso-sauce',
       name: 'Соус песто-россо',
       uuid: RecipeUuid.PestoRossoSauce,
-      imagePath: "/recipes/pesto-rosso-sauce.jpg",
+      // imagePath: "/recipes/pesto-rosso-sauce.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
       },
@@ -757,7 +782,7 @@ export async function createRecipes() {
       slug: 'ketchunez',
       name: 'Соус кетчунез',
       uuid: RecipeUuid.Ketchunez,
-      imagePath: "/recipes/ketchunez.jpg",
+      // imagePath: "/recipes/ketchunez.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
       },
@@ -794,9 +819,12 @@ export async function createRecipes() {
     data: {
       slug: 'tofu-sandwich',
       name: 'Тофу-сэндвич',
-      imagePath: "/recipes/tofu-sandwich.jpg",
+      // imagePath: "/recipes/tofu-sandwich.jpg",
       author: {
         connect: { email: 'vi@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.TofuSandwich } 
       },
       items: {
         create: [
@@ -847,6 +875,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -856,9 +885,12 @@ export async function createRecipes() {
     data: {
       slug: 'italian-sandwich',
       name: 'Итальянский Сэндвич',
-      imagePath: "/recipes/italian-sandwich.jpg",
+      // imagePath: "/recipes/italian-sandwich.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.ItalianSandwich } 
       },
       items: {
         create: [
@@ -909,6 +941,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -918,9 +951,12 @@ export async function createRecipes() {
     data: {
       slug: 'shawarma',
       name: 'Шаурма',
-      imagePath: "/recipes/shawarma.jpg",
+      // imagePath: "/recipes/shawarma.jpg",
       author: {
         connect: { email: 'vi@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.Shawarma } 
       },
       items: {
         create: [
@@ -971,6 +1007,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -980,9 +1017,12 @@ export async function createRecipes() {
     data: {
       slug: 'falafel-roll-classic',
       name: 'Фалафель-ролл классический',
-      imagePath: "/recipes/falafel-roll-classic.jpg",
+      // imagePath: "/recipes/falafel-roll-classic.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.FalafelRollClassic } 
       },
       items: {
         create: [
@@ -1033,6 +1073,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },
@@ -1042,9 +1083,12 @@ export async function createRecipes() {
     data: {
       slug: 'falafel-roll-italian',
       name: 'Фалафель-ролл итальянский',
-      imagePath: "/recipes/falafel-roll-italian.jpg",
+      // imagePath: "/recipes/falafel-roll-italian.jpg",
       author: {
         connect: { email: 'colobrod@cookbook.com' },
+      },
+      image: { 
+        connect: { uuid: MediaUuid.FalafelRollItalian } 
       },
       items: {
         create: [
@@ -1101,6 +1145,7 @@ export async function createRecipes() {
     },
     include: {
       author: true,
+      image: true,
       items: true,
       tags: true,
     },

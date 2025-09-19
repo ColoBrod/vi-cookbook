@@ -3,7 +3,6 @@
 import { useEffect, useRef, useReducer } from 'react';
 import { Box, Button, Stack, Alert } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-
 import { FormProvider, useForm, FieldErrors } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import Preview from './Preview';
@@ -12,20 +11,25 @@ import { Media } from '@/app/generated/prisma';
 import { AxiosProgressEvent } from 'axios';
 import { uploadReducer, uploadState, ActionType } from './uploadReducer';
 import { mediaSchema, MediaFormValues } from './mediaSchema';
+import { ACCEPTED_MIME_TYPES } from '@/constants/images';
 
 const defaultValues: MediaFormValues = { file: null };
 
 interface Props {
   media?: Media;
+  uploadedRef?: React.RefObject<Media|null>
 }
 
-export default function MediaForm({ media }: Props) {
-  const uploaded = useRef<Media|null>(media ?? null);
+export default function MediaForm({ media, uploadedRef }: Props) {
+  const innerRef = useRef<Media|null>(media ?? null);
+  const uploaded = uploadedRef ?? innerRef;
   const makeRequest = useHttpRequest();
   const [upload, dispatch] = useReducer(uploadReducer, {
     ...uploadState,
     previewUrl: media?.path || ''
   });
+
+  // console.log(upload.previewUrl);
 
   const formMethods = useForm<MediaFormValues>({ 
     resolver: zodResolver(mediaSchema),
@@ -40,36 +44,39 @@ export default function MediaForm({ media }: Props) {
 
   return (
     <FormProvider {...formMethods} >
-      <Box p={2} width={400} component='form' onSubmit={handleSubmit(onValid, onInvalid)}>
+      <Box >
         <Stack spacing={1}>
-          <Preview url={upload.previewUrl} />
+          <Preview {...upload} />
           <input
             id="file-input"
             ref={fileRegister.ref}
             type='file'
-            accept="image/*"
+            // accept="image/*"
+            accept={ACCEPTED_MIME_TYPES.join(', ')}
             hidden
             onChange={handleFileChange}
           />
           <Button 
-            type='submit'
+            type='button'
             variant="contained" 
             color="primary" 
             startIcon={<CloudUploadIcon />}
             fullWidth
             disabled={fileWatched === defaultValues.file}
+            onClick={handleSubmit(onValid, onInvalid)}
           >
             Загрузить изображение
           </Button>
           <Box>
-            {upload.progress && upload.completed === false
-              ? `Progress: ${upload.progress}` 
+            {upload.error 
+              ? <Alert severity='error'>
+                  {upload.error}
+                </Alert>
+              : upload.completed
+              ? <Alert severity='success'>
+                  Success
+                </Alert>
               : null}
-            {upload.error && upload.completed === true && (
-              <Alert severity='error'>
-                {upload.error}
-              </Alert>
-            )}
           </Box>
         </Stack>
       </Box>
@@ -122,7 +129,7 @@ export default function MediaForm({ media }: Props) {
   function fileChangedEffect() {
     dispatch({ type: ActionType.SetError, payload: '' });
     if (fileWatched === null) {
-      dispatch({ type: ActionType.SetPreview, payload: "" });
+      dispatch({ type: ActionType.SetPreview, payload: media?.path ?? "" });
       return;
     }
     const fileUrl = URL.createObjectURL(fileWatched);
