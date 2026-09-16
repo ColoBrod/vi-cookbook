@@ -19,8 +19,6 @@ export default async function({ searchParams }: PageProps) {
   const pagination = await getPagination();
   const orderBy = getOrderBy();
 
-  // let orderBy: Prisma.ProductOrderByWithRelationInput;
-
   const products = await prisma.product.findMany({
     skip: pagination.skip,
     take: pagination.take,

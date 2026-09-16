@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { Typography, Stack, Grid, Box, Link } from '@mui/material'
+import { Typography, Stack, Grid, Box, Link, Fab } from '@mui/material'
 import { getRecipeBySlugOrUuid, getRecipeProductsWeight } from '@/model/recipe';
 import { unitMap } from '@/constants/units';
 import { getRecipeImagePath } from '@/lib/recipe';
@@ -11,6 +11,7 @@ import MuiMarkdown from 'mui-markdown';
 import { IngredientType } from '@/app/generated/prisma';
 import NextLink from 'next/link';
 import { DEFAULT_RECIPE_IMAGE_URL } from '@/constants/images';
+import EditIcon from "@mui/icons-material/Edit";
 
 // import Link from 'next/link';
 
@@ -43,97 +44,112 @@ export default async function({ params, searchParams }: PageProps) {
   console.log(table);
 
   return (
-    <Stack p={2} spacing={2} alignItems='flex-start'>
+    <Box p={2}>
 
-      <Typography variant='h5'>{recipe.name}</Typography>
+      <Stack spacing={2} alignItems='flex-start'>
 
-      <Image 
-        src={recipe.image ? recipe.image.path : DEFAULT_RECIPE_IMAGE_URL} 
-        alt={recipe.name} 
-        width={400} 
-        height={300} 
-        style={{
-          objectFit: "cover",
-          objectPosition: "center",
+        <Typography variant='h5'>{recipe.name}</Typography>
+
+        <Image 
+          src={recipe.image ? recipe.image.path : DEFAULT_RECIPE_IMAGE_URL} 
+          alt={recipe.name} 
+          width={400} 
+          height={300} 
+          style={{
+            objectFit: "cover",
+            objectPosition: "center",
+          }}
+        />
+
+        <Stack direction='row' spacing={1}>
+          {recipe.tags.map(tag => <RecipeTag key={tag.id} {...tag} disabled />)}
+        </Stack>
+
+        <Stack spacing={1}>
+          <Typography variant='h6'>Описание:</Typography>
+          <Typography variant='body1'>
+            {recipe.description || 'Описание отсутствует'}
+          </Typography>
+        </Stack>
+
+        <Stack spacing={1}>
+          <Typography variant='h6'>Инструкции по приготовлению:</Typography>
+          <MuiMarkdown>
+            {recipe.instructions || 'Иснтрукции отсутствуют'}
+          </MuiMarkdown>
+        </Stack>
+
+        <Typography variant='h6'>Рассчитать на:</Typography>
+        <RecipeCalculateForm weight={totals.yield} />
+
+        <Typography variant='h6'>Ингредиенты</Typography>
+        <Grid container spacing={1}>
+          {table.map(row => (
+            <Fragment key={row.uuid}>
+              <Grid size={8}>
+                {
+                  row.type === IngredientType.PRODUCT
+                    ? (
+                      <Typography>
+                        {row.name}
+                      </Typography>
+                    )
+                    : (
+                      <Link component={NextLink} href={`/recipes/${row.uuid}`} variant='body1'>
+                        {row.name}
+                      </Link>
+                    )
+                }
+              </Grid>
+              <Grid size={4}>
+                <Typography>
+                  {adjustToWeight(row.amount).toFixed(2)} {unitMap.get(row.unit)}
+                </Typography>
+              </Grid>
+            </Fragment>
+          ))}
+          <Grid size={8}>
+            <Typography fontWeight='bold'>
+              Выход:
+            </Typography>
+          </Grid>
+          <Grid size={4}>
+            <Typography fontWeight='bold'>
+              {isNaN(weight) ? totals.yield.toFixed(2) : weight.toFixed(2)} г
+            </Typography>
+          </Grid>
+        </Grid>
+
+        <Typography variant='h6'>Пищевая ценность</Typography>
+        <Stack direction='row' spacing={2}>
+          <Typography>
+            Калории: {adjustToWeight(totals.calories).toFixed(2)}
+          </Typography>
+          <Typography>
+            Белки: {adjustToWeight(totals.protein).toFixed(2)}
+          </Typography>
+          <Typography>
+            Жиры: {adjustToWeight(totals.fat).toFixed(2)}
+          </Typography>
+          <Typography>
+            Углеводы: {adjustToWeight(totals.carbs).toFixed(2)}
+          </Typography>
+        </Stack>
+
+      </Stack>
+      <Fab 
+        LinkComponent={Link}
+        href={`/recipes/edit/${slug}`}
+        sx={{
+          position: 'fixed',
+          right: 16, bottom: 16
         }}
-      />
-
-      <Stack direction='row' spacing={1}>
-        {recipe.tags.map(tag => <RecipeTag key={tag.id} {...tag} disabled />)}
-      </Stack>
-
-      <Stack spacing={1}>
-        <Typography variant='h6'>Описание:</Typography>
-        <Typography variant='body1'>
-          {recipe.description || 'Описание отсутствует'}
-        </Typography>
-      </Stack>
-
-      <Stack spacing={1}>
-        <Typography variant='h6'>Инструкции по приготовлению:</Typography>
-        <MuiMarkdown>
-          {recipe.instructions || 'Иснтрукции отсутствуют'}
-        </MuiMarkdown>
-      </Stack>
-
-      <Typography variant='h6'>Рассчитать на:</Typography>
-      <RecipeCalculateForm weight={totals.yield} />
-
-      <Typography variant='h6'>Ингредиенты</Typography>
-      <Grid container spacing={1}>
-        {table.map(row => (
-          <Fragment key={row.uuid}>
-            <Grid size={8}>
-              {
-                row.type === IngredientType.PRODUCT
-                  ? (
-                    <Typography>
-                      {row.name}
-                    </Typography>
-                  )
-                  : (
-                    <Link component={NextLink} href={`/recipes/${row.uuid}`} variant='body1'>
-                      {row.name}
-                    </Link>
-                  )
-              }
-            </Grid>
-            <Grid size={4}>
-              <Typography>
-                {adjustToWeight(row.amount).toFixed(2)} {unitMap.get(row.unit)}
-              </Typography>
-            </Grid>
-          </Fragment>
-        ))}
-        <Grid size={8}>
-          <Typography fontWeight='bold'>
-            Выход:
-          </Typography>
-        </Grid>
-        <Grid size={4}>
-          <Typography fontWeight='bold'>
-            {isNaN(weight) ? totals.yield.toFixed(2) : weight.toFixed(2)} г
-          </Typography>
-        </Grid>
-      </Grid>
-
-      <Typography variant='h6'>Пищевая ценность</Typography>
-      <Stack direction='row' spacing={2}>
-        <Typography>
-          Калории: {adjustToWeight(totals.calories).toFixed(2)}
-        </Typography>
-        <Typography>
-          Белки: {adjustToWeight(totals.protein).toFixed(2)}
-        </Typography>
-        <Typography>
-          Жиры: {adjustToWeight(totals.fat).toFixed(2)}
-        </Typography>
-        <Typography>
-          Углеводы: {adjustToWeight(totals.carbs).toFixed(2)}
-        </Typography>
-      </Stack>
-
-    </Stack>
+        color="primary" 
+        aria-label="edit"
+      >
+        <EditIcon />
+      </Fab>
+    </Box>
   );
 
   // function mapTable(initialTable: RecipeTable): RecipeTable {

@@ -21,7 +21,6 @@ interface PageProps {
 const ITEMS_PER_PAGE = 12;
 
 export default async function({ searchParams }: PageProps) {
-
   const filters = await getFilters();
   const where = getWhereClause(filters);
   const pagination = await getPagination(where);

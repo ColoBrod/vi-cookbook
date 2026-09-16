@@ -7,6 +7,6 @@ export default async function() {
   const availableTags = await getRecipesTags();
 
   return (
-    <RecipeForm items={availableIngredients} tags={availableTags} />
+    <RecipeForm items={availableIngredients} tags={availableTags} image={null} />
   );
 }

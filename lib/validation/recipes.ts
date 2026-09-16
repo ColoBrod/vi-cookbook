@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IngredientType } from '@/app/generated/prisma';
+import { IngredientType, Unit } from '@/app/generated/prisma';
 
 export const recipeSchema = z.object({
   id: z.number().optional(),
@@ -13,6 +13,7 @@ export const recipeSchema = z.object({
     type: z.enum(IngredientType), // можно уточнить enum из IngredientType
     ingredientUuid: z.string().min(1, "Выбери ингредиент"),
     amount: z.number().min(0, "Amount не может быть отрицательным"),
+    unit: z.enum(Unit),
   })),
 });
 

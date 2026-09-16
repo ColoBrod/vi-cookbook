@@ -4,9 +4,13 @@ import { IngredientType } from "@/app/generated/prisma";
 import { Button } from "@mui/material";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
-export default function ButtonAddIngredient() {
+interface ButtonAddIngredientProps {
+  handleAdd: Function
+}
+
+export default function ButtonAddIngredient({ handleAdd: append }: ButtonAddIngredientProps) {
   const { control } = useFormContext();
-  const { append } = useFieldArray({ name: 'items', control });
+  // const { append } = useFieldArray({ name: 'items', control });
 
   return (
     <Button

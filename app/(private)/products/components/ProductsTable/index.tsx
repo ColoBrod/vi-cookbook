@@ -90,15 +90,12 @@ export default function ProductsTable({ rows, pagination }: ProductsTableProps) 
   }
 
   function handleSortModelChange(model: GridSortModel, details: GridCallbackDetails): void {
-    console.log(model);
-
     const params = new URLSearchParams(searchParams.toString());
     if (model.length === 0) {
       params.delete('orderBy');
       return;
     }
     const sortItem = model[0];
-    console.log(sortItem);
     params.set('orderBy', `${sortItem.field}:${sortItem.sort}`);
     router.push(`?${params.toString()}`);
   }

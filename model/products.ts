@@ -1,7 +1,9 @@
 import prisma from "@/lib/prisma";
 import { Product } from "@/app/generated/prisma";
 
-export async function getProductBySlugOrUuid(slugOrUuid: string): Promise<Product | null> {
+// : Promise<Product | null>
+
+export async function getProductBySlugOrUuid(slugOrUuid: string) {
   const product = await prisma.product.findFirst({
     where: {
       OR: [
@@ -9,19 +11,25 @@ export async function getProductBySlugOrUuid(slugOrUuid: string): Promise<Produc
         { uuid: slugOrUuid },
       ],
     },
+    include: { availableUnits: true },
   });
-  return product;
+  if (product === null) return null;
+  return {
+    ...product,
+    availableUnits: product.availableUnits.map(u => u.unit),
+  }
 }
 
-// export async function getProductId(): number {}
+// : Promise<Product | null>
 
-export async function getProductById(id: number): Promise<Product | null> {
-  const product = await prisma.product.findUnique({ where: { id } });
-  return product;
+export async function getProductById(id: number) {
+  const product = await prisma.product.findUnique({ 
+    where: { id },
+    include: { availableUnits: true },
+  });
+  if (product === null) return null;
+  return {
+    ...product,
+    availableUnits: product.availableUnits.map(u => u.unit),
+  }
 }
-
-
-//
-// export async function create(data: Product): Product {
-//   const product = await prisma.product.create({ data });
-// }

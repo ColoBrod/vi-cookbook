@@ -35,6 +35,7 @@ export default function RowButtons({ product }: RowProps) {
   );
 
   function handleEdit() {
+    console.log('roter push', product.slug);
     router.push(`/products/edit/${product.slug}`);
   }
 

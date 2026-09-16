@@ -52,7 +52,7 @@ export default function RecipeForm({
   });
   const { handleSubmit, control } = formMethods; 
 
-  const { fields } = useFieldArray({ name: 'items', control });
+  const { fields, append, remove } = useFieldArray({ name: 'items', control });
 
   return (
     <FormProvider {...formMethods}>
@@ -76,13 +76,13 @@ export default function RecipeForm({
             </Grid>
           </Grid>
 
-          <ButtonAddIngredient />
+          <ButtonAddIngredient handleAdd={append} />
 
           <Divider />
 
           <Stack py={2} spacing={2}>
             {fields.map((field, index) => (
-              <Ingredient key={field.id} field={field} index={index} items={items} />
+              <Ingredient key={field.id} field={field} index={index} items={items} remove={remove} />
             ))}
           </Stack>
 

@@ -1,20 +1,20 @@
 import prisma from "@/lib/prisma";
-import { IngredientType, Product, Recipe } from "@/app/generated/prisma";
+import { IngredientType, Product, Recipe, Unit } from "@/app/generated/prisma";
 import { FormRecipeItem, RecipeTableRow } from "@/types/recipes";
 import { Uuid, Weight } from "@/types/general";
 
 export async function getAvailableIngredients(): Promise<FormRecipeItem[]> {
   const [products, recipes] = await Promise.all([
     prisma.product.findMany({
-      select: { uuid: true, name: true }
+      select: { uuid: true, name: true, availableUnits: { select: { unit: true } } }
     }),
     prisma.recipe.findMany({
       select: { uuid: true, name: true }
     }),
   ]);
   return [
-    ...products.map(p => ({ ...p, type: IngredientType.PRODUCT })),
-    ...recipes.map(r => ({ ...r, type: IngredientType.RECIPE }))
+    ...products.map(p => ({ ...p, type: IngredientType.PRODUCT, availableUnits: p.availableUnits.map(el => el.unit) })),
+    ...recipes.map(r => ({ ...r, type: IngredientType.RECIPE, availableUnits: [Unit.G] }))
   ];
 }
 

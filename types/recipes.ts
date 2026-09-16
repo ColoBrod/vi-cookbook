@@ -7,6 +7,7 @@ export interface FormRecipeItem {
   uuid: string;
   type: IngredientType;
   name: string;
+  availableUnits: Unit[];
 }
 
 export interface FormRecipeTag {

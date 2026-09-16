@@ -5,6 +5,7 @@ import { HttpStatus } from "@/lib/http-status";
 import { isPrismaError } from "@/lib/prisma";
 
 import { updateProductSchema, UpdateProductDto, CreateProductDto, productSchema } from "@/lib/validation/products";
+import { productsService } from "@/lib/services/productsService";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -42,7 +43,7 @@ export async function PUT(request: Request, { params }: Params) {
     { status: HttpStatus.BadRequest }
   );
 
-  let parsed: CreateProductDto;
+  let parsed: UpdateProductDto;
 
   try { parsed = await request.json() }
   catch {
@@ -60,10 +61,12 @@ export async function PUT(request: Request, { params }: Params) {
 
   const { data } = validation;
 
-  const updated = await prisma.product.update({
-    where: { id },
-    data,
-  });
+  const updated = await productsService.update(id, data);
+
+  // const updated = await prisma.product.update({
+  //   where: { id },
+  //   data,
+  // });
 
   return NextResponse.json(updated, { status: HttpStatus.Ok });
 }

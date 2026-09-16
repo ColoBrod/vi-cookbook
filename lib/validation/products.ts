@@ -1,10 +1,15 @@
 import { z } from 'zod';
+import { Unit } from "@/app/generated/prisma";
+
+const unitSchema = z.enum(Unit);
 
 export const productSchema = z.object({
   // Meta
   id: z.number().optional(),
   slug: z.string().min(2, "Название для ссылки обязательно"),
   name: z.string().min(2, 'Название продукта обязательно' ),
+
+  availableUnits: z.array(unitSchema),
 
   // Nutrition Facts
 
@@ -54,8 +59,9 @@ export const productSchema = z.object({
   glycemicIndex: z.number().min(0),
 });
 
-export const updateProductSchema = productSchema.partial();
+export const patchProductSchema = productSchema.partial();
 
 export type ProductFormValues = z.infer<typeof productSchema>;
 export type CreateProductDto = z.infer<typeof productSchema>;
-export type UpdateProductDto = z.infer<typeof updateProductSchema>;
+export type UpdateProductDto = z.infer<typeof productSchema>;
+export type PatchProductDto = z.infer<typeof patchProductSchema>;

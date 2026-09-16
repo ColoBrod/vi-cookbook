@@ -12,7 +12,6 @@ class RecipesService {
   }
 
   public create(data: CreateRecipeDto, userId: number) {
-
     const { 
       slug, name, description, instructions, imageId, items, tags 
     } = data;
@@ -32,7 +31,7 @@ class RecipesService {
             ingredientUuid: item.ingredientUuid,
             ingredientType: item.type,
             amount: item.amount,
-            unit: Unit.G,
+            unit: item.unit,
           }))
         },
         tags: { 
@@ -62,7 +61,7 @@ class RecipesService {
             ingredientUuid: item.ingredientUuid,
             ingredientType: item.type,
             amount: item.amount,
-            unit: Unit.G,
+            unit: item.unit,
           }))
         },
         tags: { 

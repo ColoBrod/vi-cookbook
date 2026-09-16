@@ -1,8 +1,7 @@
 'use client'
 
-import axios from 'axios';
-import { TextField, Button, Box, Stack } from "@mui/material";
-import { useForm, Controller } from 'react-hook-form';
+import { TextField, Button, Box, Stack, Checkbox, FormLabel, FormGroup, FormControlLabel } from "@mui/material";
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 
 import { productSchema, ProductFormValues } from '@/lib/validation/products';
@@ -10,23 +9,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { slugify } from 'transliteration';
 import { useHttpRequest } from '@/hooks/useHttpRequest';
 
-// interface FormValues {
-//   slug?: string;
-//   name: string;
-//   calories?: number;
-//   protein?: number;
-//   fat?: number;
-//   carbs?: number;
-// }
+import { defaultValues } from './defaultValues'
+import { Unit } from '@/app/generated/prisma';
 
-const defaultValues: ProductFormValues = {
-  slug: "",
-  name: "",
-  calories: 0,
-  protein: 0,
-  fat: 0,
-  carbs: 0,
-}
+const allUnits: Unit[] = Object.values(Unit);
 
 interface ProductFormProps {
   product?: ProductFormValues;
@@ -75,6 +61,47 @@ export default function ProductForm({ product }: ProductFormProps) {
               error={!!error}
               helperText={error?.message}
             />
+          )}
+        />
+        <Controller
+          name="availableUnits"
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <Box>
+              <FormLabel component="legend">
+                Единицы измерения
+              </FormLabel>
+              <FormGroup row>
+                {allUnits.map((unit) => (
+                  <FormControlLabel
+                    key={unit}
+                    label={unit}
+                    control={
+                      <Checkbox
+                        checked={field.value?.includes(unit) ?? false}
+                        onChange={(e) => {
+                          const currentUnits = field.value ?? [];
+                          if (e.target.checked) field.onChange([...currentUnits, unit]);
+                          else field.onChange(currentUnits.filter((item) => item !== unit));
+                        }}
+                      />
+                    }
+                  />
+                ))}
+              </FormGroup>
+              {error && (
+                <Box
+                  sx={{
+                    color: 'error.main',
+                    fontSize: '0.75rem',
+                    mt: 0.5,
+                    ml: 1.75,
+                  }}
+                >
+                  {error.message}
+                </Box>
+              )}
+            </Box>
           )}
         />
         <Controller 
@@ -153,27 +180,6 @@ export default function ProductForm({ product }: ProductFormProps) {
             />
           )}
         />
-        {/*
-        <FormControl>
-          <InputLabel id="categories-label">Категории</InputLabel>
-          <Select
-            id="categories"
-            name="categories"
-            labelId="categories-label"
-            multiple
-            defaultValue={[]}
-          >
-            {categories.map(category => (
-              <MenuItem
-                key={category.id}
-                value={category.id}
-              >
-                {category.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        */}
 
         <Stack direction='row' spacing={2}>
           <Button type="button" variant="outlined" onClick={() => reset()}>
@@ -204,32 +210,5 @@ export default function ProductForm({ product }: ProductFormProps) {
     };
     makeRequest({ url, config, callback, notification });
 
-    // if (product) {
-    //   makeRequest({
-    //     url: '/api/products',
-    //     config: {
-    //
-    //     }
-    //
-    //   })
-    // }
-    // else {
-    //
-    // }
-    // axios.post('/api/products', data)
-    //   .then(() => router.push('/products'));
   }
-
-  // function onError(data: FormValues): void {
-  //   console.log(data);
-  // }
-
-  /*
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const formJson = Object.fromEntries((formData as any).entries());
-    console.log(formJson);
-  }
-  */
 }

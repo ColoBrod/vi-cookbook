@@ -4,6 +4,7 @@ import { Unit } from "@/app/generated/prisma";
 import { HttpStatus } from "@/lib/http-status";
 import { recipeSchema, UpdateRecipeDto } from "@/lib/validation/recipes";
 import { storeImage } from "@/lib/images";
+import { recipesService } from "@/lib/services/recipesService";
 
 type Params = {
   params: Promise<{ id: string }>
@@ -16,8 +17,7 @@ export async function DELETE(request: Request, { params }: Params) {
     { error: "Некорректный идентификатор рецепта" }, 
     { status: HttpStatus.BadRequest }
   );
-
-  await prisma.recipe.delete({ where: { id } });
+  await recipesService.delete(id);
   return NextResponse.json({ status: 200 });
 }
 
@@ -29,25 +29,11 @@ export async function PUT(request: Request, { params }: Params) {
     { status: HttpStatus.BadRequest }
   );
 
-  // const formData = await request.formData();
-  // const image = formData.get('image');
-  // const json = formData.get('data') as string;
-  //
-  // let parsed: UpdateRecipeDto;
-  //
-  // try { parsed = JSON.parse(json) }
-  // catch {
-  //   return NextResponse.json(
-  //     { error: 'Отсутствуют данные для обновления рецепта' },
-  //     { status: HttpStatus.BadRequest }
-  //   );
-  // }
-
   let parsed: UpdateRecipeDto;
   try { parsed = await request.json() }
   catch {
     return NextResponse.json(
-      { error: 'Отсутствуют данные для обновления продукта' },
+      { error: 'Отсутствуют данные для обновления рецепта' },
       { status: HttpStatus.BadRequest }
     );
   }
@@ -61,38 +47,8 @@ export async function PUT(request: Request, { params }: Params) {
 
   const { data } = validation;
 
-  // let imagePath: string | undefined;
-  // if (image instanceof File) imagePath = await storeImage(image, data);
-
-  const updated = await prisma.recipe.update({
-    where: { id },
-    data: {
-      slug: data.slug,
-      name: data.name,
-      description: data.description,
-      instructions: data.instructions,
-      imageId: data.imageId,
-      // ...(imagePath && { imagePath }),
-      items: {
-        deleteMany: {}, // удалить все старые
-        create: data.items.map(item => ({
-          ingredientUuid: item.ingredientUuid,
-          ingredientType: item.type,
-          amount: item.amount,
-          unit: Unit.G,
-        }))
-      },
-      tags: {
-        set: data.tags.map(tagId => ({ id: tagId })),
-      },
-    },
-    include: {
-      items: true,
-      tags: true,
-    }
-  });
-
-  const recipe = await prisma.recipe.findUnique({ where: { id: updated.id } });
+  const updated = await recipesService.update(id, data);
+  const recipe = await recipesService.getById(updated.id);
 
   return NextResponse.json(
     recipe, 

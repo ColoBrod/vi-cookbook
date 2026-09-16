@@ -49,6 +49,7 @@ export default async function({ params }: PageProps) {
         type: item.ingredientType,
         ingredientUuid: item.ingredientUuid,
         amount: item.amount,
+        unit: item.unit,
       })),
       tags: recipe.tags.map(tag => tag.id),
     });
